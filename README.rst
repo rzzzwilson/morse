@@ -8,25 +8,46 @@ Programs
 --------
 
 record.py
-An example program that records 5 seconds of sound and writes it to a
-.WAV file.  From http://people.csail.mit.edu/hubert/pyaudio/ .
+
+::
+
+    An example program that records 5 seconds of sound and writes it to a
+    .WAV file.  From http://people.csail.mit.edu/hubert/pyaudio/ .
 
 output.wav
-The file produced by record.py.
+
+::
+
+    The file produced by record.py.
 
 test20db.wav
-A recording of fast, noisy morse.  If the software gets good try to decode!
+
+::
+
+    A recording of fast, noisy morse.  If the software gets good try to decode!
 
 FZGHBQHIMJGBA19.ino
-An arduino sketch that decodes morse.
+
+::
+
+    An arduino sketch that decodes morse.
 
 test.py
-Basic program to sense audio levels.
+
+::
+
+    Basic program to sense audio levels.
 
 test2.py
-A more sophisticated program to find dots or dashes.
+
+::
+
+    A more sophisticated program to find dots or dashes.
 
 test3.py
-Code to try to decode morse single characters.
-Part-way done.  Needs a *lot* of fiddling with sound levels on MacOS.  Still
-injects 'noise' characters.
+
+::
+
+    Code to try to decode morse single characters.
+    Part-way done.  Needs a *lot* of fiddling with sound levels on MacOS.  Still
+    injects 'noise' characters.
