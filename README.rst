@@ -14,12 +14,6 @@ record.py
     An example program that records 5 seconds of sound and writes it to a
     .WAV file.  From http://people.csail.mit.edu/hubert/pyaudio/ .
 
-output.wav
-
-::
-
-    The file produced by record.py.
-
 test20db.wav
 
 ::
