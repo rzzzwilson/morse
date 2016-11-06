@@ -28,3 +28,5 @@ A more sophisticated program to find dots or dashes.
 
 test3.py
 Code to try to decode morse single characters.
+Part-way done.  Needs a *lot* of fiddling with sound levels on MacOS.  Still
+injects 'noise' characters.
