@@ -24,7 +24,8 @@ FZGHBQHIMJGBA19.ino
 
 ::
 
-    An arduino sketch that decodes morse.
+    An arduino sketch that decodes morse.  I *think* I got this from
+    http://dementedhacker.nl/tag/morse .
 
 test.py
 
