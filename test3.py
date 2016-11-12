@@ -145,7 +145,7 @@ def readMorse(stream):
 #                print('~~ DIFFERENT: hold=%d' % hold)
                 hold -= 1
                 if hold <= 0:
-                    if state and count > 2:
+                    if state and count > 3:
 #                        print('#### %s %d %s' % (str(state), count, 'DOT' if count < DOT_DASH else 'DASH'))
                         morse += '.' if count < DOT_DASH else '-'
                     hold = HOLD

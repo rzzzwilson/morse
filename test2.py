@@ -112,20 +112,14 @@ for s in samples:
     if bucket >= MaxBucket:
         bucket = MaxBucket - 1
     s_state = (bucket > threshold)
-    print('state=%s, s_state=%s' % (str(state), str(s_state)))
     if s_state == state:
         count += 1
         hold = HOLD
-        print('~~ SAME: count=%d' % count)
     else:
-        print('~~ DIFFERENT: hold=%d' % hold)
         hold -= 1
         if hold <= 0:
-            if state and count > 2:
+            if state and count > 3:
                 print('#### %s %d %s' % (str(state), count, 'DOT' if count < DOT_DASH else 'DASH'))
             hold = HOLD
             count = 1
             state = s_state
-
-#if state and count > 0:
-#    print('#### %s %d' % (str(state), count))

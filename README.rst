@@ -4,8 +4,8 @@ Recognize morse code
 The code here is my attempt to decode morse code heard on the
 external microphone into English.
 
-Programs
---------
+Files
+-----
 
 record.py
 
@@ -45,3 +45,10 @@ test3.py
     Code to try to decode morse single characters.
     Part-way done.  Needs a *lot* of fiddling with sound levels on MacOS.  Still
     injects 'noise' characters.
+
+www2.mp3
+www3.mp3
+
+::
+
+    Morse audio files from http://www.learnmorsecode.com
