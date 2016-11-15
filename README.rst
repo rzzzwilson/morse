@@ -49,9 +49,20 @@ test3.py
     Part-way done.  Needs a *lot* of fiddling with sound levels on MacOS.  Still
     injects 'noise' characters.
 
-www2.mp3
-www3.mp3
+test4.py
 
 ::
 
-    Morse audio files from http://www.learnmorsecode.com
+    ?
+
+gui.py
+
+::
+
+    Example of graphing audio data.
+
+sound_examples/*
+
+::
+
+    Morse audio files from http://www.learnmorsecode.com and other places.
