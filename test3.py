@@ -1,18 +1,26 @@
+#!/bin/env python
+
+from __future__ import print_function
 import sys
-import pyaudio
+import logger
+try:
+    import pyaudio
+except ImportError:
+    print('You have to do "workon pyopengl" first.')
+    sys.exit(10)
 import wave
 import time
 import struct
 import math
 
-HOLD = 5
+HOLD = 7
 #CHUNK = 1024
 CHUNK = 32
 FORMAT = pyaudio.paInt16
 #FORMAT = pyaudio.paInt32
 CHANNELS = 1
-RATE = 14400
-RECORD_SECONDS = 2
+#RATE = 14400
+RATE = 5000
 SHORT_NORMALIZE = (1.0 / 32768.0)
 
 DOT_DASH = 70
@@ -82,8 +90,8 @@ def decodeMorse(morse):
     try:
         char = Morse[morse]
     except KeyError:
-        char = u'\u00bf'
-    print char,
+        char = u'\u00bf' + '<%s>' % morse
+    print(char, end='')
     sys.stdout.flush()
 
 def getLevel(frame):
@@ -116,49 +124,55 @@ def getSample(stream):
             count = 0
 
 def readMorse(stream):
+    last_floor = [10, 10, 10, 10]
+    last_floor_len = len(last_floor)
     while True:
+        log('?????')
         samples = getSample(stream)
 
         # dump samples
+        avg = int(sum(samples) / len(samples))
         top = max(samples)
         bot = min(samples)
-        bucket_size = (top-bot) / MaxBucket
-        threshold = MaxBucket / 4
-        #print('top=%d, bot=%d, bucket_size=%d, b_s*MaxBucket=%d, threshold=%d'
-        #      % (top, bot, bucket_size, bucket_size*MaxBucket, threshold))
+        delta = top - bot
+        bucket_size = (delta) / MaxBucket
+        last_floor.append(bot)
+        last_floor = last_floor[1:]
+        avg_floor = int(sum(last_floor) / last_floor_len)
+        #threshold = avg_floor + (top - bot)/2
+        threshold = avg + (delta)/4
+        log('avg=%d, top=%d, bot=%d, threshold=%d, last_floor=%s' % (avg, top, bot, threshold, str(last_floor)))
 
         state = False
         count = 0
         hold = HOLD
         morse = ''
+        samples = [int(x) for x in samples]
+        values = ['*' if x > threshold else x for x in samples]
+        log('samples: %s' % str(samples))
+        log('values: %s' % str(values))
         for s in samples:
             bucket = int(s / bucket_size)
             if bucket >= MaxBucket:
                 bucket = MaxBucket - 1
             s_state = (bucket > threshold)
-#            print('state=%s, s_state=%s' % (str(state), str(s_state)))
             if s_state == state:
                 count += 1
                 hold = HOLD
-#                print('~~ SAME: count=%d' % count)
             else:
-#                print('~~ DIFFERENT: hold=%d' % hold)
                 hold -= 1
                 if hold <= 0:
                     if state and count > 3:
-#                        print('#### %s %d %s' % (str(state), count, 'DOT' if count < DOT_DASH else 'DASH'))
                         morse += '.' if count < DOT_DASH else '-'
                     hold = HOLD
                     count = 1
                     state = s_state
 
-        #if state and count > 0:
-        #    print('#### %s %d' % (str(state), count))
-
         if morse:
+            log('Morse: %s' % morse)
             decodeMorse(morse)
-#            print morse,
-#            sys.stdout.flush()
+
+log = logger.Log('test3.log', logger.Log.DEBUG)
 
 p = pyaudio.PyAudio()
 
