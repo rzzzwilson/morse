@@ -4,6 +4,8 @@ Recognize morse code
 The code here is my attempt to decode morse code heard on the
 external microphone into English.
 
+Uses python 2.x and pyaudio.
+
 Files
 -----
 
