@@ -145,7 +145,7 @@ class LiveFFTWidget(QWidget):
         # top plot
         self.ax_top = self.main_figure.figure.add_subplot(211)
 #        self.ax_top.set_ylim(-32768, 32768)
-        self.ax_top.set_ylim(0, 2048)
+        self.ax_top.set_ylim(0, 32768)
         self.ax_top.set_xlim(0, self.time_vect.max())
         self.ax_top.set_xlabel(u'time (ms)', fontsize=6)
 
