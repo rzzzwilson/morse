@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/bin/env python3
 
 from __future__ import print_function
 import sys
@@ -11,13 +11,14 @@ except ImportError:
 import time
 import struct
 import math
+import numpy as np
 
-HOLD = 5
+
 #CHUNK = 1024
 CHUNK = 32
 #FORMAT = pyaudio.paFloat32
-FORMAT = pyaudio.paInt16
 #FORMAT = pyaudio.paInt32
+FORMAT = pyaudio.paInt16
 CHANNELS = 1
 #RATE = 14400
 RATE = 5000
@@ -27,7 +28,7 @@ DOT_DASH = 70
 
 MaxBucket = 32
 
-SILENCE = 200
+SILENCE = 10
 
 Morse = {
          '.-': 'A',
@@ -86,93 +87,133 @@ Morse = {
         }
 
 
-def decodeMorse(morse):
+#def movingaverage(interval, window_size):
+#    window = np.ones(int(window_size))/float(window_size)
+#    return np.convolve(interval, window, 'same')
+
+def emit_char(char):
+    """Send character to output 'raw'."""
+
+    print(char, end='')
+    sys.stdout.flush()
+
+def decode_morse(morse):
+    """Decode morse code and send character to output.
+
+    Also return the decode character.
+    """
+
     try:
         char = Morse[morse]
     except KeyError:
         char = u'\u00bf' + '<%s>' % morse
     print(char, end='')
     sys.stdout.flush()
+    return char
 
-def getLevel(frame):
-    count = len(frame) / 2
-    format = '%dh' % count
-    shorts = struct.unpack(format, frame)
+def get_sample(stream):
+    """Return a sample number that indicates sound or silence.
 
-    sum_squares = 0.0
-    for sample in shorts:
-        n = sample * SHORT_NORMALIZE
-        sum_squares += n * n
-    rms = math.pow(sum_squares/count, 0.5)
-    return rms * 1000.0
+    Returned values are:
+        -N  silence for N samples
+        N   N samples of sound (terminated by silence)
+    """
 
-def getSample(stream):
-    samples = []
+    # state values
+    S_SOUND = 1
+    S_SILENCE = 2
+
+    # count of silence or sound time
     count = 0
 
-    SIGNAL = 80
+    # signal threshold, should be dynamic
+    SIGNAL = 10000
+
+    # hang time before silence is noticed
+    HOLD = 7
+
+    state = S_SILENCE
+    hold = HOLD
 
     while True:
         data = stream.read(CHUNK, exception_on_overflow=False)
-        value = getLevel(data)
-        samples.append(value)
-        if value < SIGNAL:
-            count += 1
-            if count > SILENCE:
-                return samples
-        else:
-            count = 0
+        data = np.fromstring(data, 'int16')
+        data = [abs(x) for x in data]
+        value = sum(data) // len(data)      # average value
+#        log('get_sample: value=%d, SIGNAL=%d' % (value, SIGNAL))
 
-def readMorse(stream):
-    last_floor = [10, 10, 10, 10]
-    last_floor_len = len(last_floor)
-    while True:
-        log('?????')
-        samples = getSample(stream)
-
-        # dump samples
-        avg = int(sum(samples) / len(samples))
-        top = max(samples)
-        bot = min(samples)
-        delta = top - bot
-        bucket_size = (delta) / MaxBucket
-        last_floor.append(bot)
-        last_floor = last_floor[1:]
-        avg_floor = int(sum(last_floor) / last_floor_len)
-        #threshold = avg_floor + (top - bot)/2
-        threshold = avg + (delta)/4
-        log('avg=%d, top=%d, bot=%d, threshold=%d, last_floor=%s' % (avg, top, bot, threshold, str(last_floor)))
-
-        state = False
-        count = 0
-        hold = HOLD
-        morse = ''
-        samples = [int(x) for x in samples]
-        values = ['*' if x > threshold else x for x in samples]
-        log('samples: %s' % str(samples))
-        log('values: %s' % str(values))
-        for s in samples:
-            bucket = int(s / bucket_size)
-            if bucket >= MaxBucket:
-                bucket = MaxBucket - 1
-            s_state = (bucket > threshold)
-            if s_state == state:
+        if state == S_SILENCE:
+            if value < SIGNAL:
                 count += 1
-                hold = HOLD
+                if count >= SILENCE:
+                    return -count
             else:
+                # we have a signal, change to SOUND state
+                state = S_SOUND
+                count = 0
+        else:
+            # in SOUND state
+            if value < SIGNAL:
                 hold -= 1
                 if hold <= 0:
-                    if state and count > 3:
-                        morse += '.' if count < DOT_DASH else '-'
-                    hold = HOLD
-                    count = 1
-                    state = s_state
+                    # silence at the end of a SOUND period
+                    # return SOUND result
+                    return count
+            else:
+                hold = HOLD
+                count += 1
 
-        if morse:
-            log('Morse: %s' % morse)
-            decodeMorse(morse)
+def read_morse(stream):
+    """Read Morse data from 'stream' and decode into English."""
 
-log = logger.Log('test3.log', logger.Log.DEBUG)
+    MIN_DOT_LENGTH = 3
+    DOT_LENGTH = 10
+    DASH_LENGTH = DOT_LENGTH * 3
+
+    DOT_DASH = 30       # threshold between dot & dash
+
+    ELEM_LENGTH = DOT_LENGTH
+    CHAR_SPACE = DOT_LENGTH * 3
+    WORD_SPACE = DOT_LENGTH * 7
+
+    SPACE_LENGTH = 3
+    space_count = 0
+    morse = ''
+    sent_space = False
+
+    emit_char('*')
+
+    while True:
+        sample = get_sample(stream)
+        log('read_morse: sample=%s' % str(sample))
+
+        if sample > 0:
+            if sample <= MIN_DOT_LENGTH:
+                continue
+            # got a dot or dash
+            if sample > DOT_DASH:
+                morse += '-'
+            else:
+                morse += '.'
+            sent_space = False
+        else:
+            # got a silence, bump silence counter
+            space_count += 1
+
+            # if silence long enough, emit a space
+            if space_count > SPACE_LENGTH:
+                if morse:
+                    decode = decode_morse(morse)
+                    log('Morse: %s (%s)' % (morse, decode))
+                    morse = ''
+                else:
+                    if not sent_space:
+                        space_count = 0
+                        emit_char(' ')
+                        sent_space = True
+
+
+log = logger.Log('test4.log', logger.Log.DEBUG)
 
 p = pyaudio.PyAudio()
 
@@ -182,7 +223,7 @@ morse = p.open(format=FORMAT,
                input=True,
                frames_per_buffer=CHUNK)
 
-readMorse(morse)
+read_morse(morse)
 
 morse.stop_stream()
 morse.close()
