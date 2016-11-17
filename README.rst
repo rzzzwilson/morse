@@ -53,7 +53,10 @@ test4.py
 
 ::
 
-    ?
+    This program steals the initial data handling from gui.py and also decodes
+    the sound data in a different way.  Each 32 sample frame is averaged and 
+    classified as SOUND or SILENT, with the count of silent/sound samples
+    returned.  Later code then decides if we have a DOT, DASH or SILENCE.
 
 gui.py
 
