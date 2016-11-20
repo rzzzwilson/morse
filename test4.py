@@ -24,12 +24,6 @@ CHANNELS = 1
 RATE = 5000
 SHORT_NORMALIZE = (1.0 / 32768.0)
 
-DOT_DASH = 70
-
-MaxBucket = 32
-
-SILENCE = 10
-
 Morse = {
          '.-': 'A',
          '-...': 'B',
@@ -127,10 +121,13 @@ def get_sample(stream):
     count = 0
 
     # signal threshold, should be dynamic
-    SIGNAL = 10000
+    SIGNAL = 5000
+
+    # no SOUND for this time is SILENCE
+    SILENCE = 30
 
     # hang time before silence is noticed
-    HOLD = 7
+    HOLD = 2
 
     state = S_SILENCE
     hold = HOLD
@@ -140,15 +137,18 @@ def get_sample(stream):
         data = np.fromstring(data, 'int16')
         data = [abs(x) for x in data]
         value = sum(data) // len(data)      # average value
-#        log('get_sample: value=%d, SIGNAL=%d' % (value, SIGNAL))
+#        if value >= SIGNAL:
+#            log('get_sample: value=%d, SIGNAL=%d\t\t%s' % (value, SIGNAL, '********' if value >= SIGNAL else ''))
 
         if state == S_SILENCE:
             if value < SIGNAL:
                 count += 1
+#                log('get_sample: continuing SILENCE')
                 if count >= SILENCE:
                     return -count
             else:
                 # we have a signal, change to SOUND state
+#                log('get_sample: start of SOUND')
                 state = S_SOUND
                 count = 0
         else:
@@ -158,59 +158,77 @@ def get_sample(stream):
                 if hold <= 0:
                     # silence at the end of a SOUND period
                     # return SOUND result
+#                    log('get_sample: SILENCE after SOUND, send SOUND result')
                     return count
             else:
                 hold = HOLD
                 count += 1
+#                log('get_sample: continuing SOUND, count')
 
 def read_morse(stream):
     """Read Morse data from 'stream' and decode into English."""
 
-    MIN_DOT_LENGTH = 3
-    DOT_LENGTH = 10
+    # lengths of various things, most of this is dynamic
+    DOT_LENGTH = 7
     DASH_LENGTH = DOT_LENGTH * 3
+    CHAR_SPACE = (DOT_LENGTH * 3) // 30
+    WORD_SPACE = (DOT_LENGTH * 7) // 30
+    DOT_DASH = (DOT_LENGTH + DASH_LENGTH)//2       # threshold between dot & dash
+    log('read_morse: DASH_LENGTH=%d, DOT_LENGTH=%d, DOT_DASH=%d, CHAR_SPACE=%d, WORD_SPACE=%d'
+        % (DASH_LENGTH, DOT_LENGTH, DOT_DASH, CHAR_SPACE, WORD_SPACE))
 
-    DOT_DASH = 30       # threshold between dot & dash
-
-    ELEM_LENGTH = DOT_LENGTH
-    CHAR_SPACE = DOT_LENGTH * 3
-    WORD_SPACE = DOT_LENGTH * 7
-
-    SPACE_LENGTH = 3
     space_count = 0
     morse = ''
     sent_space = False
+    sent_word_space = False
 
-    emit_char('*')
+    emit_char('*')      # show we are ready to go
 
     while True:
         sample = get_sample(stream)
         log('read_morse: sample=%s' % str(sample))
 
         if sample > 0:
-            if sample <= MIN_DOT_LENGTH:
+            if sample < 3:
                 continue
-            # got a dot or dash
+            # got a sound, dot or dash?
             if sample > DOT_DASH:
                 morse += '-'
+                DASH_LENGTH = (DASH_LENGTH + sample) // 2
+                log('got -')
             else:
                 morse += '.'
+                DOT_LENGTH = (DOT_LENGTH + sample) // 2
+                log('got .')
+            DOT_DASH = (DOT_LENGTH + DASH_LENGTH) // 2
+            CHAR_SPACE = (DOT_LENGTH * 3) // 30
+            WORD_SPACE = (DOT_LENGTH * 7) // 30
             sent_space = False
+            log('read_morse: DASH_LENGTH=%d, DOT_LENGTH=%d, DOT_DASH=%d, CHAR_SPACE=%d, WORD_SPACE=%d'
+                % (DASH_LENGTH, DOT_LENGTH, DOT_DASH, CHAR_SPACE, WORD_SPACE))
         else:
             # got a silence, bump silence counter
             space_count += 1
+            log('read_morse: space_count=%d, CHAR_SPACE=%d, WORD_SPACE=%d'
+                % (space_count, CHAR_SPACE, WORD_SPACE))
 
             # if silence long enough, emit a space
-            if space_count > SPACE_LENGTH:
+            if space_count > CHAR_SPACE:
                 if morse:
                     decode = decode_morse(morse)
                     log('Morse: %s (%s)' % (morse, decode))
                     morse = ''
+                    space_count = 0
                 else:
                     if not sent_space:
                         space_count = 0
                         emit_char(' ')
                         sent_space = True
+            if space_count > WORD_SPACE:
+                if not sent_word_space:
+                    space_count = 0
+                    emit_char(' ')
+                    sent_word_space = True
 
 
 log = logger.Log('test4.log', logger.Log.DEBUG)
