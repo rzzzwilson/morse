@@ -1,19 +1,31 @@
 #!/bin/env python3
 
+"""
+Program to read morse sounds from the internal microphone and print
+the English characters.
+
+Usage:  morse.py [-x]
+
+where the -x option means don't read the params JSON file
+"""
+
+
 import_errors = False
 
 import sys
+import json
+
 try:
     import pyaudio
 except ImportError:
     print("Can't import 'pyaudio'")
     import_errors = True
+
 try:
     import numpy as np
 except ImportError:
     print("Can't import 'numpy'")
     import_errors = True
-import json
 
 if import_errors:
     sys.exit(10)
@@ -260,7 +272,8 @@ def read_morse(stream):
                     sent_word_space = True
                 word_count = 0
 
-load_params(PARAMS_FILE)
+if not '-x' in sys.argv[1:]:
+    load_params(PARAMS_FILE)
 
 p = pyaudio.PyAudio()
 
