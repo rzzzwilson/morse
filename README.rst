@@ -23,7 +23,7 @@ morse.py
 
 ::
 
-    The latest *production* code.
+    The latest production code.
 
 record.py
 
