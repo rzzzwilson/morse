@@ -4,7 +4,16 @@ Recognize morse code
 The code here is my attempt to decode morse code heard on the
 external microphone into English.
 
-Uses python 2.x and pyaudio.
+Uses python 3.x with pyaudio and numpy.
+
+::
+
+    $ make
+    Sound: maximum, ANR off
+    python3 morse.py
+    *TEST  ^C
+    $
+
 
 Files
 -----
@@ -15,12 +24,6 @@ record.py
 
     An example program that records 5 seconds of sound and writes it to a
     .WAV file.  From http://people.csail.mit.edu/hubert/pyaudio/ .
-
-test20db.wav
-
-::
-
-    A recording of fast, noisy morse.  If the software gets good try to decode!
 
 FZGHBQHIMJGBA19.ino
 
