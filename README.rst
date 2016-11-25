@@ -4,7 +4,8 @@ Recognize morse code
 The code here is my attempt to decode morse code heard on the
 external microphone into English.
 
-Uses python 3.x with pyaudio and numpy.
+Uses python 3.x with pyaudio and numpy.  Run the program and make morse sounds
+after the program prints an asterisk:
 
 ::
 
@@ -17,6 +18,12 @@ Uses python 3.x with pyaudio and numpy.
 
 Files
 -----
+
+morse.py
+
+::
+
+    The latest *production* code.
 
 record.py
 
