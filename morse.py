@@ -1,13 +1,22 @@
 #!/bin/env python3
 
+import_errors = False
+
 import sys
 try:
     import pyaudio
 except ImportError:
-    print('You have to do "workon morse" first.')
-    sys.exit(10)
-import numpy as np
+    print("Can't import 'pyaudio'")
+    import_errors = True
+try:
+    import numpy as np
+except ImportError:
+    print("Can't import 'numpy'")
+    import_errors = True
 import json
+
+if import_errors:
+    sys.exit(10)
 
 
 # path to file holding morse recognition parameters
@@ -199,9 +208,6 @@ def read_morse(stream):
 
     global DOT_LENGTH, DASH_LENGTH, DOT_DASH, CHAR_SPACE, WORD_SPACE
 
-    log('read_morse: DOT_LENGTH=%d, DASH_LENGTH=%d, DOT_DASH=%d, CHAR_SPACE=%d, WORD_SPACE=%d'
-        % (DOT_LENGTH, DASH_LENGTH, DOT_DASH, CHAR_SPACE, WORD_SPACE))
-
     space_count = 0
     word_count = 0
     morse = ''
@@ -215,18 +221,15 @@ def read_morse(stream):
 
         if sample > 0:
             if sample < 3:
-                log('got short sound, sample=%d' % sample)
                 continue
             sent_word_space = False
             # got a sound, dot or dash?
             if sample > DOT_DASH:
                 morse += '-'
                 DASH_LENGTH = (DASH_LENGTH*2 + sample) // 3
-                log('got -')
             else:
                 morse += '.'
                 DOT_LENGTH = (DOT_LENGTH*2 + sample) // 3
-                log('got .')
             DOT_DASH = (DOT_LENGTH + DASH_LENGTH) // 2
             #CHAR_SPACE = DOT_LENGTH * 3
             #WORD_SPACE = DOT_LENGTH * 7
@@ -239,18 +242,13 @@ def read_morse(stream):
             # got a silence, bump silence counters
             space_count += 1
             word_count += 1
-            log('sample=%d, space_count=%d, word_count=%d, CHAR_SPACE=%d, WORD_SPACE=%d'
-                % (sample, space_count, word_count, CHAR_SPACE, WORD_SPACE))
 
             # if silence long enough, emit a space
             if space_count > CHAR_SPACE:
                 space_count = 0
                 if morse:
                     decode = decode_morse(morse)
-                    log('Morse: %s (%s)' % (morse, decode))
                     morse = ''
-                    log('modified: DOT_LENGTH=%d, DASH_LENGTH=%d, DOT_DASH=%d, CHAR_SPACE=%d, WORD_SPACE=%d'
-                        % (DOT_LENGTH, DASH_LENGTH, DOT_DASH, CHAR_SPACE, WORD_SPACE))
                     word_count = 0
                 elif not sent_space:
                     emit_char(' ')
@@ -261,8 +259,6 @@ def read_morse(stream):
                     emit_char(' ')
                     sent_word_space = True
                 word_count = 0
-
-log = logger.Log('test4.log', logger.Log.DEBUG)
 
 load_params(PARAMS_FILE)
 
