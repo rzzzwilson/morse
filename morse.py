@@ -34,7 +34,7 @@ if import_errors:
 # path to file holding morse recognition parameters
 PARAMS_FILE = 'morse_params.json'
 
-CHUNK = 32
+CHUNK = 16
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 8000
@@ -46,8 +46,8 @@ DASH_LENGTH = DOT_LENGTH * 3
 DOT_DASH = (DOT_LENGTH + DASH_LENGTH)//2       # threshold between dot & dash
 
 # lower sampling rate counters
-CHAR_SPACE = 3      # number of silences indicates a space
-WORD_SPACE = 9      # number of silences to end word
+CHAR_SPACE = 2      # number of silences indicates a space
+WORD_SPACE = 8      # number of silences to end word
 
 # dict to translate morse code to English chars
 Morse = {
@@ -256,7 +256,7 @@ def read_morse(stream):
             word_count += 1
 
             # if silence long enough, emit a space
-            if space_count > CHAR_SPACE:
+            if space_count >= CHAR_SPACE:
                 space_count = 0
                 if morse:
                     decode = decode_morse(morse)
@@ -266,7 +266,7 @@ def read_morse(stream):
                     emit_char(' ')
                     sent_space = True
 
-            if word_count > WORD_SPACE:
+            if word_count >= WORD_SPACE:
                 if not sent_word_space:
                     emit_char(' ')
                     sent_word_space = True
