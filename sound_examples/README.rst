@@ -1,3 +1,9 @@
+Lots of good example files at known speeds are at:
+
+::
+
+    http://www.arrl.org/code-practice-files
+    
 test20db.wav
 
 ::
