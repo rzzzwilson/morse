@@ -1,10 +1,10 @@
 Design of morse recognizer
 ==========================
 
-Various ideas were tried in the programs test.py through test[N].py.
+Various ideas were tried in the programs *test.py* through *test[N].py*.
 
-test4.py was the first moderately successful incarnation and forms the
-basis of morse.py.
+*test4.py* was the first moderately successful incarnation and forms the
+basis of *morse.py*.
 
 Design
 ======
