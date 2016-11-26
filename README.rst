@@ -15,6 +15,10 @@ after the program prints an asterisk:
     *TEST  ^C
     $
 
+The design is described here_.
+
+.. _here: https://github.com/rzzzwilson/morse/design.rst
+
 
 Files
 -----
@@ -78,4 +82,14 @@ sound_examples/*
 
 ::
 
-    Morse audio files from http://www.learnmorsecode.com and other places.
+
+Example/Ideas Code
+------------------
+
+http://flothesof.github.io/pyqt-microphone-fft-application.html
+
+https://healthyalgorithms.com/2013/08/22/dsp-in-python-active-noise-reduction-with-pyaudio/
+
+http://bastibe.de/2012-11-02-real-time-signal-processing-in-python.html
+
+
