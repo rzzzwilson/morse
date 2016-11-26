@@ -216,6 +216,8 @@ def read_morse(stream):
 
     while True:
         sample = get_sample(stream)
+        log('sample=%d, space_count=%d, word_count=%d, DOT_LENGTH=%d, DASH_LENGTH=%d, DOT_DASH=%d, CHAR_SPACE=%d, WORD_SPACE=%d'
+            % (sample, space_count, word_count, DOT_LENGTH, DASH_LENGTH, DOT_DASH, CHAR_SPACE, WORD_SPACE))
 
         if sample > 0:
             if sample < 3:
@@ -243,11 +245,9 @@ def read_morse(stream):
             # got a silence, bump silence counters
             space_count += 1
             word_count += 1
-            log('sample=%d, space_count=%d, word_count=%d, CHAR_SPACE=%d, WORD_SPACE=%d'
-                % (sample, space_count, word_count, CHAR_SPACE, WORD_SPACE))
 
             # if silence long enough, emit a space
-            if space_count > CHAR_SPACE:
+            if space_count >= CHAR_SPACE:
                 space_count = 0
                 if morse:
                     decode = decode_morse(morse)
@@ -260,7 +260,7 @@ def read_morse(stream):
                     emit_char(' ')
                     sent_space = True
 
-            if word_count > WORD_SPACE:
+            if word_count >= WORD_SPACE:
                 if not sent_word_space:
                     emit_char(' ')
                     sent_word_space = True
