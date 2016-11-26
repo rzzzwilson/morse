@@ -18,21 +18,11 @@ www3.mp3
 
     Samples of slower morse.
 
-Got these next from https://commons.wikimedia.org/wiki/Category:Audio_files_of_Morse_code:
+More samples at https://commons.wikimedia.org/wiki/Category:Audio_files_of_Morse_code .
 
-secretmorzecode.wav
 
-CQD.ogg
+Known speed examples from ARRL
+------------------------------
 
-Wikipedia_30wpm.ogg
-
-Wikipedia-Morse.ogg
-
-Morsedemorp.ogg
-
-SOS.ogg
-
-What_hath_God_wrought.ogg
-
-secretmorzecode.wav
-
+Lots of samples at http://www.arrl.org/code-practice-files .  Files downloaded
+from there are in the *arrl* subdirectory.
