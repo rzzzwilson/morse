@@ -79,12 +79,12 @@ the appropriate English character.
 
 If the morse character is *not* recognized the decode mechanism returns a string
 indicating the unrecognized character.  For example, an attempt to recognize
-three morse characters with the second character not recognized (7 dots) would
+three morse characters with the second character not recognized (7 sounds) would
 result in this display:
 
 ::
 
-    A¿<.......>Z
+    A¿<....-..>Z
 
 Dynamic Parameter Caching
 -------------------------
@@ -95,3 +95,11 @@ either delete the save file before executing *morse.py* or use the **-x**
 option.
 
 *morse.py* also always saves the dynamic parameters when shutting down.
+
+Further Work
+============
+
+*morse.py* isn't perfect. We need to do work on:
+
+- Recognizing faster morse
+- Handling noise better
