@@ -99,7 +99,15 @@ option.
 Further Work
 ============
 
+The program can easily decode the example code sound files from the ARRL Code
+Practice website at http://www.arrl.org/code-practice-files.  It reads the
+40 wpm file easily, but is less perfect at slow speeds such as 5 or 10 wpm.
+The main difficulty at slow speeds is getting the inter-char and inter-word
+space decision right.  This is bad at slow speeds because the value used to
+determine the spacing is hard-coded and not dynamic.
+
 *morse.py* isn't perfect. We need to do work on:
 
 - Recognizing faster morse
 - Handling noise better
+- Handling inter-char and inter-word spacing dynamically
