@@ -1,9 +1,6 @@
-Lots of good example files at known speeds are at:
+Files
+=====
 
-::
-
-    http://www.arrl.org/code-practice-files
-    
 test20db.wav
 
 ::
