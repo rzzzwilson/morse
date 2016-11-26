@@ -41,13 +41,13 @@ RATE = 8000
 
 # lengths of various things
 # most of this is dynamic and loaded/saved in PARAMS_FILE
-DOT_LENGTH = 19
+DOT_LENGTH = 10
 DASH_LENGTH = DOT_LENGTH * 3
 DOT_DASH = (DOT_LENGTH + DASH_LENGTH)//2       # threshold between dot & dash
 
 # lower sampling rate counters
-CHAR_SPACE = 2      # number of silences indicates a space
-WORD_SPACE = 8      # number of silences to end word
+CHAR_SPACE = 3      # number of silences indicates a space
+WORD_SPACE = 9      # number of silences to end word
 
 # dict to translate morse code to English chars
 Morse = {
