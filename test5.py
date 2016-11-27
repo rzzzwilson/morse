@@ -40,9 +40,9 @@ FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 8000
 
-# lengths of various things
+# lengths of various things (set for my slow speed!)
 # most of this is dynamic and loaded/saved in ParamsFile
-LenDot = 10
+LenDot = 30
 LenDash = LenDot * 3
 DotDashThreshold = (LenDot + LenDash)//2       # threshold between dot & dash
 
@@ -272,8 +272,8 @@ def read_morse(stream):
                 LenDot = (LenDot*2 + count) // 3
                 log('got .')
             DotDashThreshold = (LenDot + LenDash) // 2
-            CharSpace = 2
-            WordSpace = 6
+#            CharSpace = 2
+#            WordSpace = 6
             sent_space = False
             space_count = 0
             word_count = 0
