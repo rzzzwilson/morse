@@ -1,7 +1,6 @@
 #
-# Use correct virtualenv
+# Run tests more easily.
 #
 
 test:
-	@echo "Sound: maximum, ANR off"
 	python3 morse.py
