@@ -2,11 +2,14 @@
 
 """
 Program to read morse sounds from the internal microphone and print
-the English characters.
+the English characters.  The program attempts to read dynamic parameters
+from the default JSON file ({progname}.json).
 
-Usage:  morse.py [-x]
+Usage:  {progname}.py [-f <params_file>] [-h] [-n]
 
-where the -x option means don't read the params JSON file
+where -f <params_file> means read params from the given file
+      -h               means print this help and stop
+      -n               means don't read any params JSON file
 """
 
 
@@ -14,6 +17,7 @@ import_errors = False
 
 import sys
 import json
+import getopt
 import logger
 
 try:
@@ -32,8 +36,16 @@ if import_errors:
     sys.exit(10)
 
 
+# get program name from sys.argv
+ProgName = sys.argv[0]
+if ProgName.endswith('.py'):
+    ProgName = ProgName[:-3]
+
 # path to file holding morse recognition parameters
-ParamsFile = 'morse_params.json'
+ParamsFile = '%s.json' % ProgName
+
+# name of the file to log to
+LogFile = '%s.log' % ProgName
 
 CHUNK = 16
 FORMAT = pyaudio.paInt16
@@ -309,10 +321,36 @@ def read_morse(stream):
         log('LenDot=%d, LenDash=%d, DotDashThreshold=%d, CharSpace=%d, WordSpace=%d'
             % (LenDot, LenDash, DotDashThreshold, CharSpace, WordSpace))
 
-log = logger.Log('test4.log', logger.Log.DEBUG)
+def usage(msg=None):
+    if msg:
+        print(('*'*80 + '\n%s\n' + '*'*80) % msg)
+    print(__doc__.format(progname=ProgName))
 
-if not '-x' in sys.argv[1:]:
-    load_params(ParamsFile)
+
+# start the logging
+log = logger.Log(LogFile, logger.Log.DEBUG)
+
+# parse the CLI params
+argv = sys.argv[1:]
+
+try:
+    (opts, args) = getopt.getopt(argv, 'f:hn', ['file=', 'help', 'noparams'])
+except getopt.GetoptError as err:
+    usage(err)
+    sys.exit(1)
+
+params_file = ParamsFile
+for (opt, param) in opts:
+    if opt in ['-f', '--file']:
+        params_file = param
+    elif opt in ['-h', '--help']:
+        usage()
+        sys.exit(0)
+    elif opt in ['-n', '--noparams']:
+        params_file = None
+
+if params_file:
+    load_params(params_file)
 
 p = pyaudio.PyAudio()
 
