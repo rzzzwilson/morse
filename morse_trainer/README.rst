@@ -12,17 +12,18 @@ Requirements
 * Teach sending and receiving morse
     * SEND listens to morse sounds and displays the decoded morse
     * RECEIVE sounds morse and listener types in the received characters
-* Uses Kock and selectable characters approaches
+* Have a "practice communication" mode, computer is other end?
+* Uses both Koch and selectable characters approaches
 * User can vary char and word speeds independently
 * Program keeps learning statistics for feedback
-* Caters to more than one user (different stats per user)
+* Multiple users, each with own history/statistics (so, login)
 
 Implementation
 --------------
 
 * python3
 * PyQt
-* use sqlite to state statistics/history
+* use sqlite for statistics/history memory
 
 Design
 ------
@@ -79,3 +80,28 @@ Statistics kept:
 * % correct, in current test and globally
 * relative error rates by character
 
+Character Selection
+-------------------
+
+Selection of characters will be from groups:
+
+* common (selection of alphabetics, numerals and some punctuation)
+* alphabetic
+* numerals
+* punctuation
+* callsigns
+* prosigns
+
+The selection of characters will allow one or more  groups, with the user being
+allowed to choose a sub-set of a group.
+
+Sending Selection
+-----------------
+
+The user can choose what to send and how they are sent:
+
+* characters - group (4/5), Q codes, etc
+* English text (from built-in or external text)
+* prosigns
+* callsigns
+* actual contacts (may be send then receive then send, ...)
