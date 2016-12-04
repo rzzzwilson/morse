@@ -12,26 +12,14 @@ vertical characters.
 display = Display(...)
 
 .clear()                # whole display cleared
-.clear_upper(index)     # single char removed
-.clear_lower(index)     # single char removed
 
 .insert_upper(ch, index=None, fg=None)
 .insert_lower(ch, index=None, fg=None)
-
-.show_str_upper(string)
-.show_str_lower(string)
-.show_str(upper, lower) # fills both upper and lower
 
 .set_tooltip(index, txt)
 .clear_tooltip(index)
 
 .left_scroll(num=None)                      # could be automatic?
-
-.set_upper_font(colour=..., size=...)       # set size/colour of display row
-.set_lower_font(colour-..., size=...)
-
-.set_upper_colour(index, fg=..., bg=...)    # set fg/bg colour of one char
-.set_lower_colour(index, fg=..., bg=...)
 
 .upper_len()
 .lower_len()
@@ -44,10 +32,7 @@ Instance variables
 Text is always left-justified in the display.
 
 .text_upper         # list of text in the display row
-.text_lower
-
-.cursor_upper       # index of 'next to be filled'
-.cursor_lower
+.text_lower         # a list of (char, colour) tuples
 
 .tooltips_upper     # list of tooltip, None means 'not defined'
 .tooltips_lower
@@ -64,151 +49,140 @@ from PyQt5.QtGui import QPainter, QFont, QColor, QPen
 from PyQt5.QtGui import QFontDatabase
 
 
-# set platform-dependent sizes
-if platform.system() == 'Windows':
-    DefaultWidgetHeight = 55
-    DefaultWidgetWidth = 600
-    BaselineOffsetUpper = 24
-    BaselineOffsetLower = 48
-    FontSize = 30
-    TextLeftOffset = 3
-elif platform.system() == 'Linux':
-    DefaultWidgetHeight = 55
-    DefaultWidgetWidth = 600
-    BaselineOffsetUpper = 24
-    BaselineOffsetLower = 48
-    FontSize = 30
-    TextLeftOffset = 3
-elif platform.system() == 'Darwin':
-    DefaultWidgetHeight = 55
-    DefaultWidgetWidth = 600
-    BaselineOffsetUpper = 24
-    BaselineOffsetLower = 48
-    FontSize = 30
-    TextLeftOffset = 3
-else:
-    raise Exception('Unrecognized platform: %s' % platform.system())
 
 class Display(QWidget):
     """Widget to display two rows of text for the Morse Trainer."""
+
+    # define colours
+    AskTextColour = Qt.black
+    AnsTextGoodColour = Qt.blue
+    AnsTextBadColour = Qt.red
+    HighlightColour = QColor(255, 255, 153)
+    HighlightEdgeColour = QColor(234, 234, 234)
+
+    # set platform-dependent sizes
+    if platform.system() == 'Windows':
+        DefaultWidgetHeight = 55
+        DefaultWidgetWidth = 600
+        BaselineOffsetUpper = 24
+        BaselineOffsetLower = 48
+        FontSize = 30
+        TextLeftOffset = 3
+    elif platform.system() == 'Linux':
+        DefaultWidgetHeight = 55
+        DefaultWidgetWidth = 600
+        BaselineOffsetUpper = 24
+        BaselineOffsetLower = 48
+        FontSize = 30
+        TextLeftOffset = 3
+    elif platform.system() == 'Darwin':
+        DefaultWidgetHeight = 55
+        DefaultWidgetWidth = 600
+        BaselineOffsetUpper = 24
+        BaselineOffsetLower = 48
+        FontSize = 30
+        TextLeftOffset = 3
+    else:
+        raise Exception('Unrecognized platform: %s' % platform.system())
+
+    # length of the test string used to determine character pixel width
+    TestStringLength = 100
 
     def __init__(self):
         super().__init__()
         self.initUI()
 
-    def initUI(self):
-        """Set up the UI for the display and internal state."""
-
-        # do what we can for the widget
-        self.setMinimumSize(DefaultWidgetWidth, DefaultWidgetHeight)
-
-        # set the widget internal state
-#        self.fixed_font = QFontDatabase.systemFont(QFontDatabase.FixedFont)
-        self.fixed_font = QFont('Courier', FontSize)
-        self.font_size = FontSize
-        self.font = self.fixed_font
-
-        # define colours
-        self.blue_colour = QColor(128, 128, 255)
-        self.black_colour = QColor(0, 0, 0)
-        self.red_colour = QColor(255, 0, .64)
-        self.yellow_colour = QColor(255, 255, 153)
-        self.highlight_edge_colour = QColor(234, 234, 234)
-        self.background_colour = QColor(255, 255, 255)
-
-        self.ask_text_colour = self.black_colour
-        self.ans_text_good_colour = self.blue_colour
-        self.ans_text_bad_colour = self.red_colour
-
-        self.text_upper = []        # tuples of (char, colour)
-        self.text_lower = []
-        self.cursor_upper = 0       # index of upper/lower cursor
-        self.cursor_lower = 0
-        self.tooltips_upper = []    # text of upper/lower tooltips
-        self.tooltips_lower = []
-        self.highlight_index = 39
-        self.highlight_index = None
-        self.highlight_colour = self.yellow_colour
-
-        # height of widget never changes, width might
-        self.height = DefaultWidgetHeight
-
-        # define start positions for upper and lower text
-        self.upper_start = QPoint(TextLeftOffset, BaselineOffsetUpper)
-        self.lower_start = QPoint(TextLeftOffset, BaselineOffsetLower)
-
-###############  TEMP
-        for index in range(40):
-            self.insert_upper('U', fg=self.ask_text_colour)
-
-        for index in range(39):
-            if index in (5, 32):
-                self.insert_lower('L', fg=self.ans_text_bad_colour)
-            else:
-                self.insert_lower('L', fg=self.ans_text_good_colour)
-        self.set_highlight()
-###############  TEMP
+        # clear the internal state
+        self.clear()
 
         # force a draw
         self.update()
 
+    def initUI(self):
+        """Set up the UI."""
+
+        # set the widget internal state
+        self.setMinimumSize(Display.DefaultWidgetWidth,
+                            Display.DefaultWidgetHeight)
+        self.fixed_font = QFont('Courier', Display.FontSize)
+        self.font_size = Display.FontSize
+        self.font = self.fixed_font
+
+        # height of widget never changes, width might
+        self.height = Display.DefaultWidgetHeight
+
+        # define start positions for upper and lower text
+        self.upper_start = QPoint(Display.TextLeftOffset, Display.BaselineOffsetUpper)
+        self.lower_start = QPoint(Display.TextLeftOffset, Display.BaselineOffsetLower)
+
+        # cache for pixel size of one character in display (set in drawWidget())
+        self.char_width = None
+        self.char_height = None
+
     def paintEvent(self, e):
+        """Prepare to draw the widget."""
+
         qp = QPainter()
         qp.begin(self)
         self.drawWidget(qp)
         qp.end()
 
     def drawWidget(self, qp):
+        """Draw the widget from internal state."""
+
+        # set to the font we use in the widget
         qp.setFont(self.font)
 
-        # get size of strng of 10 chars
-        test_str = 'HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH'
-        str_width = qp.fontMetrics().boundingRect(test_str).width()
-        str_height = qp.fontMetrics().boundingRect(test_str).height()
-        char_width = str_width // len(test_str) + 1
+        # get char sizes in pixels from a test string (once)
+        # we do this here because we need a context and font before measurement
+        if self.char_width is None:
+            test_str = 'H' * Display.TestStringLength
+            str_width = qp.fontMetrics().boundingRect(test_str).width()
+            self.char_width = str_width // Display.TestStringLength + 1
+            self.char_height = qp.fontMetrics().boundingRect(test_str).height()
 
         # clear the display
         window_size = self.size()
         width = window_size.width()
         height = window_size.height()
-        qp.setPen(self.background_colour)
-        qp.setBrush(self.background_colour)
+        qp.setPen(Qt.white)
+        qp.setBrush(Qt.white)
         qp.drawRect(0, 0, width, height)
 
         # draw any highlights
         if self.highlight_index is not None:
             # calculate pixel offset of X start of highlight
-            hl_x = TextLeftOffset + char_width * self.highlight_index
+            hl_x = Display.TextLeftOffset + self.char_width * self.highlight_index
             # draw highlight rectangle
-            qp.setPen(self.highlight_edge_colour)
-            qp.setBrush(self.highlight_colour)
-            qp.drawRect(hl_x, 0, char_width, DefaultWidgetHeight)
+            qp.setPen(Display.HighlightEdgeColour)
+            qp.setBrush(Display.HighlightColour)
+            qp.drawRect(hl_x, 0, self.char_width, Display.DefaultWidgetHeight)
 
         # draw upper text
-        x = TextLeftOffset
+        x = Display.TextLeftOffset
         last_colour = None
         for (char, colour) in self.text_upper:
             if last_colour != colour:
                 qp.setPen(colour)
                 last_colour = colour
-            qp.drawText(x, BaselineOffsetUpper, char)
-            x += char_width
+            qp.drawText(x, Display.BaselineOffsetUpper, char)
+            x += self.char_width
 
         # draw lower text
-        x = TextLeftOffset
+        x = Display.TextLeftOffset
         last_colour = None
         for (char, colour) in self.text_lower:
             if last_colour != colour:
                 qp.setPen(colour)
                 last_colour = colour
-            qp.drawText(x, BaselineOffsetLower, char)
-            x += char_width
+            qp.drawText(x, Display.BaselineOffsetLower, char)
+            x += self.char_width
 
     def resizeEvent(self, e):
         """Handle widget resize.
 
-        The main focus here is that we must scroll the display ytexy if the
-        width becomes small enough.
+        The main focus here is that we must scroll the display text if the
+        width becomes small and limits the view.
         """
 
         print('resizeEvent: e=%s' % str(e))
@@ -216,25 +190,26 @@ class Display(QWidget):
 #        print('e.GraphicsSceneResize=%s' % str(e.GraphicsSceneResize))
 
     def upper_len(self):
+        """Return length of the upper text."""
+
         return len(self.text_upper)
 
     def lower_len(self):
+        """Return length of the lower text."""
+
         return len(self.text_lower)
 
     def clear(self):
         """Clear the widget display."""
 
-        pass
+        # clear actual data in display
+        self.text_upper = []        # tuples of (char, colour)
+        self.text_lower = []
+        self.tooltips_upper = []    # text of upper/lower tooltips
+        self.tooltips_lower = []
+        self.highlight_index = None
 
-    def clear_upper(self, index):
-        """Remove character in upper row at index."""
-
-        pass
-
-    def clear_lower(self, index):
-        """Remove character in lower row at index."""
-
-        pass
+        self.update()               # force a redraw
 
     def insert_upper(self, ch, index=None, fg=None):
         """Insert char at end of upper row.
@@ -244,7 +219,7 @@ class Display(QWidget):
         """
 
         if fg is None:
-            fg = self.ask_text_colour
+            fg = Display.AskTextColour
 
         if index is None:
             self.text_upper.append((ch, fg))
@@ -257,41 +232,24 @@ class Display(QWidget):
         """
 
         if fg is None:
-            fg = self.ans_text_good_colour
+            fg = Display.AnsTextGoodColour
 
         if index is None:
             self.text_lower.append((ch, fg))
 
-    def show_text_upper(self, text):
-        """Replace upper row with text.
-
-        The existing upper row is replaced entirely, tooltips/highlight cleared.
-        """
-
-        pass
-
-    def show_text_lower(self, text):
-        """Replace lower row with text.
-
-        The existing lower row is replaced entirely, tooltips/highlight cleared.
-        """
-
-        pass
-
-    def show_str(self, upper, lower):
-        """Replace upper AND lower rows with text.
-
-        The existing rows are replaced entirely, tooltips/highlight cleared.
-        """
-
-        pass
-
-    def set_tooltip(self, index, text=None):
+    def set_tooltip(self, index, text):
         """"Set tooltip text at a column.
 
-        text  the new tooltip text
+        index  index of the tooltip to set
+        text   the new tooltip text
+        """
 
-        If 'text' is None, remove the tooltip.
+        pass
+
+    def clear_tooltip(self, index):
+        """"Clear tooltip text at a column.
+
+        index  index of the tooltip to clear
         """
 
         pass
@@ -306,46 +264,25 @@ class Display(QWidget):
 
         pass
 
-    def set_upper_font(self, size=None, colour=None):
-        """Set size/colour of upper font.
-
-        size    the font size
-        colour  the font foreground colour
-
-        If either param is None, use a default value.
-        """
-
-        pass
-
-    def set_lower(self, size=None, colour=None):
-        """Set size/colour of lower font.
-
-        size    the font size
-        colour  the font foreground colour
-
-        If either param is None use a default value.
-        """
-
-        pass
-
-    def set_highlight(self, index=None):
+    def set_highlight(self, index):
         """Show a highlight at index position 'index'.
 
-        If index is None, set highlight at end of upper text.
-        Throws an IndexError exception if 'index' not within upper text.
+        Throws an IndexError exception if 'index' not within upper text
+        or one position past the right end of the longest text.
         """
 
-        if index is None:
-            index = self.upper_len() - 1
+        max_length = max(self.upper_len(), self.lower_len())
 
-        if not 0 <= index < self.upper_len():
+        if not 0 <= index <= max_length:
             raise IndexError('Highlight index %d is out of range [0, %d]'
-                             % (index, self.upper_len()))
+                             % (index, max_length))
 
         self.highlight_index = index
-        return index
+        self.update()
 
     def get_highlight(self):
+        """Return the current highlight index."""
+
         return self.highlight_index
 
 
@@ -385,21 +322,49 @@ if __name__ == '__main__':
             self.setWindowTitle('Example of Display widget')
             self.show()
 
+            # populate the display widget a bit
+            for index in range(40):
+                if index in (7, 21):
+                    self.display.insert_upper('U', fg=Display.AnsTextBadColour)
+                else:
+                    self.display.insert_upper('U', fg=Display.AskTextColour)
+
+            for index in range(39):
+                if index in (5, 32):
+                    self.display.insert_lower('L', fg=Display.AnsTextBadColour)
+                else:
+                    self.display.insert_lower('L', fg=Display.AnsTextGoodColour)
+            self.display.set_highlight(40)
+
         def leftButtonClicked(self):
             """Move highlight to the left, if possible."""
 
             index = self.display.get_highlight()
-            index -= 1
-            print('index=%d' % index)
-            if index >= 0:
-                self.display.set_highlight(index)
-            self.display.update()
+            if index is not None:
+                index -= 1
+                if index >= 0:
+                    self.display.set_highlight(index)
+#                self.display.update()
 
         def rightButtonClicked(self):
-            """Move highlight to the left, if possible."""
+            """Clear display, reenter new test text.."""
 
-            self.display.set_highlight()
-            self.display.update()
+            self.display.clear()
+
+            for index in range(25):
+                if index in (7, 21):
+                    self.display.insert_upper('1', fg=Display.AnsTextBadColour)
+                else:
+                    self.display.insert_upper('1', fg=Display.AskTextColour)
+
+            for index in range(39):
+                if index in (5, 22):
+                    self.display.insert_lower('8', fg=Display.AnsTextBadColour)
+                else:
+                    self.display.insert_lower('8', fg=Display.AnsTextGoodColour)
+            self.display.set_highlight(10)
+
+
 
 
     app = QApplication(sys.argv)
