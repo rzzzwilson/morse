@@ -44,9 +44,9 @@ Text is always left-justified in the display.
 import platform
 
 from PyQt5.QtWidgets import QWidget, QTableWidget, QPushButton, QMessageBox
+from PyQt5.QtWidgets import QToolTip
 from PyQt5.QtCore import QObject, Qt, pyqtSignal, QPoint
 from PyQt5.QtGui import QPainter, QFont, QColor, QPen
-from PyQt5.QtGui import QFontDatabase
 
 
 
@@ -71,6 +71,8 @@ class Display(QWidget):
         FontSize = 30
         TextLeftOffset = 3
         RoundedRadius = 3.0
+        TooltipOffset = 33
+        TooltipLineOffset = 13
     elif platform.system() == 'Linux':
         DefaultWidgetHeight = 55
         DefaultWidgetWidth = 600
@@ -79,6 +81,8 @@ class Display(QWidget):
         FontSize = 30
         TextLeftOffset = 3
         RoundedRadius = 3.0
+        TooltipOffset = 33
+        TooltipLineOffset = 13
     elif platform.system() == 'Darwin':
         DefaultWidgetHeight = 55
         DefaultWidgetWidth = 600
@@ -87,6 +91,8 @@ class Display(QWidget):
         FontSize = 30
         TextLeftOffset = 3
         RoundedRadius = 3.0
+        TooltipOffset = 33
+        TooltipLineOffset = 13
     else:
         raise Exception('Unrecognized platform: %s' % platform.system())
 
@@ -166,14 +172,11 @@ class Display(QWidget):
                     text = None
 
                 if text:
-                    msg = QMessageBox()
-                    msg.setIcon(QMessageBox.Information)
-                    msg.setText("This test failed.\nLine 2.")
-                    msg.setInformativeText(text+'\nLine 2.')
-                    msg.setWindowTitle("Test information\nLine 2.")
-                    #msg.setDetailedText("The details are as follows:")
-                    msg.setStandardButtons(QMessageBox.Ok)
-                    msg.exec_()
+                    num_newlines = text.count('\n')
+                    offset = (Display.TooltipOffset +
+                              Display.TooltipLineOffset*num_newlines)
+                    posn = e.globalPos() + QPoint(0, -offset)
+                    QToolTip.showText(posn, text)
 
     def paintEvent(self, e):
         """Prepare to draw the widget."""
@@ -402,14 +405,14 @@ if __name__ == '__main__':
                     self.display.insert_upper('U', fg=Display.AskTextColour)
 
             for index in range(39):
-                if index in (5, 32):
+                if index in (5, 19):
                     self.display.insert_lower('L', fg=Display.AnsTextBadColour)
                 else:
                     self.display.insert_lower('L', fg=Display.AnsTextGoodColour)
             self.display.set_highlight(40)
-            self.display.set_tooltip(0, 'Tooltip at index 0')
+            self.display.set_tooltip(0, "Expected 'A', got 'N'\nweqweqwe")
             self.display.set_tooltip(5, 'Tooltip at index 5')
-            self.display.set_tooltip(39, 'Tooltip at index 39')
+            self.display.set_tooltip(19, "Expected 'A', got 'N'\nweqweqwe\nasdasdadasd\na\na\na\na\na")
 
         def leftButtonClicked(self):
             """Move highlight to the left, if possible."""
@@ -434,7 +437,7 @@ if __name__ == '__main__':
             self.display.insert_upper(' ', fg=Display.AskTextColour)
 
             for index in range(25):
-                if index in (5, 22):
+                if index in (5, 19):
                     self.display.insert_lower('8', fg=Display.AnsTextBadColour)
                 else:
                     self.display.insert_lower('8', fg=Display.AnsTextGoodColour)
