@@ -43,7 +43,7 @@ Text is always left-justified in the display.
 
 import platform
 
-from PyQt5.QtWidgets import QWidget, QTableWidget, QPushButton
+from PyQt5.QtWidgets import QWidget, QTableWidget, QPushButton, QMessageBox
 from PyQt5.QtCore import QObject, Qt, pyqtSignal, QPoint
 from PyQt5.QtGui import QPainter, QFont, QColor, QPen
 from PyQt5.QtGui import QFontDatabase
@@ -59,6 +59,8 @@ class Display(QWidget):
     AnsTextBadColour = Qt.red
     HighlightColour = QColor(255, 255, 153)
     HighlightEdgeColour = QColor(234, 234, 234)
+    HoverColour = Qt.black
+    HoverEdgeColour = QColor(255, 255, 255, alpha=0)
 
     # set platform-dependent sizes
     if platform.system() == 'Windows':
@@ -68,6 +70,7 @@ class Display(QWidget):
         BaselineOffsetLower = 48
         FontSize = 30
         TextLeftOffset = 3
+        RoundedRadius = 3.0
     elif platform.system() == 'Linux':
         DefaultWidgetHeight = 55
         DefaultWidgetWidth = 600
@@ -75,6 +78,7 @@ class Display(QWidget):
         BaselineOffsetLower = 48
         FontSize = 30
         TextLeftOffset = 3
+        RoundedRadius = 3.0
     elif platform.system() == 'Darwin':
         DefaultWidgetHeight = 55
         DefaultWidgetWidth = 600
@@ -82,6 +86,7 @@ class Display(QWidget):
         BaselineOffsetLower = 48
         FontSize = 30
         TextLeftOffset = 3
+        RoundedRadius = 3.0
     else:
         raise Exception('Unrecognized platform: %s' % platform.system())
 
@@ -94,6 +99,9 @@ class Display(QWidget):
 
         # clear the internal state
         self.clear()
+
+        # turn on mouse tracking
+        self.setMouseTracking(True)
 
         # force a draw
         self.update()
@@ -119,6 +127,54 @@ class Display(QWidget):
         self.char_width = None
         self.char_height = None
 
+    def clear(self):
+        """Clear the widget display."""
+
+        # clear actual data in display
+        self.text_upper = []        # tuples of (char, colour)
+        self.text_lower = []
+
+        self.tooltips = []          # list of tooltip text or None
+
+        self.highlight_index = None # index of current highlight
+
+        self.hover_index = None     # mouse hovering over this column
+
+        self.update()               # force a redraw
+
+    def mouseMoveEvent(self, e):
+        index = self.x2index(e.x())
+        self.hover_index = index
+        if index is not None:
+            self.update()
+
+    def mousePressEvent(self, e):
+        """Left click handler - maybe show 'tooltip'."""
+
+        # coding for e.button() and e.type() values
+        # button = {1:'left', 2:'right', 4:'middle'}
+        # type = {2:'single', 4:'double'}
+
+        # single click, left button, show tooltip, if any at position
+        if e.type() == 2 and e.button() == 1:
+            # figure out what index test we clicked on
+            index = self.x2index(e.x())
+            if index >= 0:
+                try:
+                    text = self.tooltips[index]
+                except IndexError:
+                    text = None
+
+                if text:
+                    msg = QMessageBox()
+                    msg.setIcon(QMessageBox.Information)
+                    msg.setText("This test failed.\nLine 2.")
+                    msg.setInformativeText(text+'\nLine 2.')
+                    msg.setWindowTitle("Test information\nLine 2.")
+                    #msg.setDetailedText("The details are as follows:")
+                    msg.setStandardButtons(QMessageBox.Ok)
+                    msg.exec_()
+
     def paintEvent(self, e):
         """Prepare to draw the widget."""
 
@@ -126,6 +182,14 @@ class Display(QWidget):
         qp.begin(self)
         self.drawWidget(qp)
         qp.end()
+
+    def x2index(self, x):
+        """Convert widget x coordinate to column index.
+
+        Returns None if 'x' isn't in a column.
+        """
+
+        return (x - Display.TextLeftOffset + 1) // self.char_width
 
     def drawWidget(self, qp):
         """Draw the widget from internal state."""
@@ -156,7 +220,10 @@ class Display(QWidget):
             # draw highlight rectangle
             qp.setPen(Display.HighlightEdgeColour)
             qp.setBrush(Display.HighlightColour)
-            qp.drawRect(hl_x, 0, self.char_width, Display.DefaultWidgetHeight)
+            qp.drawRoundedRect(hl_x, 0, self.char_width,
+                               Display.DefaultWidgetHeight,
+                               Display.RoundedRadius,
+                               Display.RoundedRadius)
 
         # draw upper text
         x = Display.TextLeftOffset
@@ -177,6 +244,19 @@ class Display(QWidget):
                 last_colour = colour
             qp.drawText(x, Display.BaselineOffsetLower, char)
             x += self.char_width
+
+        # draw hover selection, if any
+        if self.hover_index is not None:
+            sys.stdout.flush()
+            # calculate pixel offset of X start of hover selection
+            hl_x = Display.TextLeftOffset + self.char_width * self.hover_index
+            # draw hover selection rectangle
+            qp.setPen(Display.HoverColour)
+            qp.setBrush(Display.HoverEdgeColour)
+            qp.drawRoundedRect(hl_x, 0, self.char_width,
+                               Display.DefaultWidgetHeight,
+                               Display.RoundedRadius,
+                               Display.RoundedRadius)
 
     def resizeEvent(self, e):
         """Handle widget resize.
@@ -199,18 +279,6 @@ class Display(QWidget):
 
         return len(self.text_lower)
 
-    def clear(self):
-        """Clear the widget display."""
-
-        # clear actual data in display
-        self.text_upper = []        # tuples of (char, colour)
-        self.text_lower = []
-        self.tooltips_upper = []    # text of upper/lower tooltips
-        self.tooltips_lower = []
-        self.highlight_index = None
-
-        self.update()               # force a redraw
-
     def insert_upper(self, ch, index=None, fg=None):
         """Insert char at end of upper row.
 
@@ -223,6 +291,8 @@ class Display(QWidget):
 
         if index is None:
             self.text_upper.append((ch, fg))
+            if len(self.text_upper) > len(self.tooltips):
+                self.tooltips.append(None)
 
     def insert_lower(self, ch, index=None, fg=None):
         """Insert char at end of lower row.
@@ -236,6 +306,8 @@ class Display(QWidget):
 
         if index is None:
             self.text_lower.append((ch, fg))
+            if len(self.text_lower) > len(self.tooltips):
+                self.tooltips.append(None)
 
     def set_tooltip(self, index, text):
         """"Set tooltip text at a column.
@@ -244,7 +316,7 @@ class Display(QWidget):
         text   the new tooltip text
         """
 
-        pass
+        self.tooltips[index] = text
 
     def clear_tooltip(self, index):
         """"Clear tooltip text at a column.
@@ -252,7 +324,7 @@ class Display(QWidget):
         index  index of the tooltip to clear
         """
 
-        pass
+        self.tooltips[index] = None
 
     def left_scroll(self, num=None):
         """Left scroll display.
@@ -335,6 +407,9 @@ if __name__ == '__main__':
                 else:
                     self.display.insert_lower('L', fg=Display.AnsTextGoodColour)
             self.display.set_highlight(40)
+            self.display.set_tooltip(0, 'Tooltip at index 0')
+            self.display.set_tooltip(5, 'Tooltip at index 5')
+            self.display.set_tooltip(39, 'Tooltip at index 39')
 
         def leftButtonClicked(self):
             """Move highlight to the left, if possible."""
@@ -344,7 +419,6 @@ if __name__ == '__main__':
                 index -= 1
                 if index >= 0:
                     self.display.set_highlight(index)
-#                self.display.update()
 
         def rightButtonClicked(self):
             """Clear display, reenter new test text.."""
@@ -357,12 +431,17 @@ if __name__ == '__main__':
                 else:
                     self.display.insert_upper('1', fg=Display.AskTextColour)
 
-            for index in range(39):
+            self.display.insert_upper(' ', fg=Display.AskTextColour)
+
+            for index in range(25):
                 if index in (5, 22):
                     self.display.insert_lower('8', fg=Display.AnsTextBadColour)
                 else:
                     self.display.insert_lower('8', fg=Display.AnsTextGoodColour)
             self.display.set_highlight(10)
+            self.display.set_tooltip(0, 'Tooltip at index 0')
+            self.display.set_tooltip(5, 'Tooltip at index 5')
+            self.display.set_tooltip(19, 'Tooltip at index 19')
 
 
 
