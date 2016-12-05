@@ -166,4 +166,5 @@ params_file = '%s.param' % prog_name
 
 app = QApplication(sys.argv)
 ex = MorseTrainer(params_file)
-sys.exit(app.exec_())
+app.exec()
+#sys.exit(app.exec_())

@@ -245,9 +245,9 @@ class ReadMorse:
 
         while True:
             (count, level) = self._get_sample(self.stream)
-            print('ReadMorse.read_morse: get_sample() returned (%s, %s)' % (str(count), str(level)))
 
             if count > 0:
+                print('ReadMorse.read_morse: get_sample() returned (%s, %s)' % (str(count), str(level)))
                 # got a sound
                 self.max_signal = level
                 if count < 3:
