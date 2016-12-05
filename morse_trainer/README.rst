@@ -22,7 +22,8 @@ Implementation
 --------------
 
 * python3
-* PyQt
+* PyQt5
+* numpy
 * use sqlite for statistics/history memory
 
 Design
