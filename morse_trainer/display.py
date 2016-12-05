@@ -154,6 +154,10 @@ class Display(QWidget):
         if index is not None:
             self.update()
 
+    def leaveEvent(self, e):
+        self.hover_index = None
+        self.update()
+
     def mousePressEvent(self, e):
         """Left click handler - maybe show 'tooltip'."""
 
@@ -189,10 +193,16 @@ class Display(QWidget):
     def x2index(self, x):
         """Convert widget x coordinate to column index.
 
-        Returns None if 'x' isn't in a column.
+        Returns None if 'x' isn't in a column that is displayed.
         """
 
-        return (x - Display.TextLeftOffset + 1) // self.char_width
+        index = (x - Display.TextLeftOffset + 1) // self.char_width
+        max_length = max(self.upper_len(), self.lower_len())
+
+        if not 0 <= index < max_length:
+            index = None
+
+        return index
 
     def drawWidget(self, qp):
         """Draw the widget from internal state."""
@@ -338,7 +348,7 @@ class Display(QWidget):
 
         pass
 
-    def set_highlight(self, index):
+    def set_highlight(self, index=None):
         """Show a highlight at index position 'index'.
 
         Throws an IndexError exception if 'index' not within upper text
@@ -346,6 +356,8 @@ class Display(QWidget):
         """
 
         max_length = max(self.upper_len(), self.lower_len())
+        if index is None:
+            index = max_length - 1
 
         if not 0 <= index <= max_length:
             raise IndexError('Highlight index %d is out of range [0, %d]'
@@ -410,7 +422,7 @@ if __name__ == '__main__':
                     self.display.insert_lower('L', fg=Display.AnsTextGoodColour)
             self.display.set_highlight(40)
             self.display.set_tooltip(0, "Expected 'A', got 'N'\nweqweqwe")
-            self.display.set_tooltip(5, 'Tooltip at index 5')
+            self.display.set_tooltip(5, 'Tooltip at index 5, rewyerewrewtrewtrewtrewtrewrtewtrewrewtrewtrewtrewtrewtrew')
             self.display.set_tooltip(19, "Expected 'A', got 'N'\nweqweqwe\nasdasdadasd\na\na\na\na\na")
 
         def leftButtonClicked(self):

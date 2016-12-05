@@ -7,7 +7,7 @@ the English characters.  The code can read dynamic parameters from
 a JSON file.  The dynamic parameters (possibly changed) can be save
 back to a file.
 
-morse = ReadMorse(params_file)
+morse = ReadMorse()
 ----------------
 
 morse.load_params(params_file)
@@ -88,7 +88,7 @@ class ReadMorse:
             }
 
 
-    def __init__(self, params_file=None):
+    def __init__(self):
         """Prepare the ReceiveMorse object."""
 
         # set receive params to defaults
@@ -110,6 +110,7 @@ class ReadMorse:
                                         rate=ReadMorse.RATE,
                                         input=True,
                                         frames_per_buffer=ReadMorse.CHUNK)
+        print('ReadMorse.__init__: initialized')
 
     def close(self):
         self.stream.stop_stream()
@@ -125,6 +126,7 @@ class ReadMorse:
         if filename is None:
             return
 
+        print('ReadMorse.save_params: saving to file %s' % filename)
         data_dict = {
                      'self.len_dot': self.len_dot,
                      'self.len_dash': self.len_dash,
@@ -147,6 +149,7 @@ class ReadMorse:
         if filename is None:
             return
 
+        print('ReadMorse.load_params: loading from file %s' % filename)
         try:
             with open(filename, 'r') as fd:
                 data = json.load(fd)
@@ -242,6 +245,7 @@ class ReadMorse:
 
         while True:
             (count, level) = self._get_sample(self.stream)
+            print('ReadMorse.read_morse: get_sample() returned (%s, %s)' % (str(count), str(level)))
 
             if count > 0:
                 # got a sound
