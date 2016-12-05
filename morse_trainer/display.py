@@ -250,7 +250,6 @@ class Display(QWidget):
 
         # draw hover selection, if any
         if self.hover_index is not None:
-            sys.stdout.flush()
             # calculate pixel offset of X start of hover selection
             hl_x = Display.TextLeftOffset + self.char_width * self.hover_index
             # draw hover selection rectangle
