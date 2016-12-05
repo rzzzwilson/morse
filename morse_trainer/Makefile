@@ -3,4 +3,4 @@
 #
 
 test:
-	python3 display.py
+	python3 morse_trainer.py

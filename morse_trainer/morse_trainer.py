@@ -1,109 +1,122 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 """
-The 'morse trainer' program.
+A PyQt5 application to help a user learn to send and receive Morse code.
 
-Usage: morse_trainer.py [-d <number>] [-h]
-
-Where -d <number>  sets the debug level
-      -h           prints this help AND THEN STOPS
+You need a morse key and Code Practice Oscillator (CPO).
 """
 
 import sys
-import getopt
-import traceback
+import platform
+import queue
 
-import logger
-from PyQt5.QtWidgets import QWidget, QMessageBox, QApplication
-from PyQt5.QtWidgets import QPushButton, QToolTip, QLabel
-from PyQt5.QtCore import QCoreApplication
-from PyQt5.QtGui import QFont
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QApplication, QHBoxLayout, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QPushButton, QMessageBox
+import receive_morse as RM
+import display
 
 
-# name and version number of the trainer
-ProgName = 'Morse Trainer'
-ProgVersion = '0.1'
+# set platform-dependent sizes
+if platform.system() == 'Windows':
+    pass
+elif platform.system() == 'Linux':
+    pass
+elif platform.system() == 'Darwin':
+    pass
+else:
+    raise Exception('Unrecognized platform: %s' % platform.system())
 
-# the log file
-LogFile = 'morse_trainer.log'
 
-# width and height of top-level widget
-WidgetWidth = 600
-WidgetHeight = 400
+class MorseTrainer(QWidget):
+    """Application to demonstrate the Morse Trainer 'display' widget."""
 
-
-class MainWindow(QWidget):
-
-    def __init__(self, debug):
+    def __init__(self):
         super().__init__()
-        self.initUI(debug)
-        self.dirty = True
+        self.initUI()
+        self.receive_q = queue.Queue()
+        print('End of __init__()')
+        sys.stdout.flush()
 
-    def initUI(self, debug):
-        QToolTip.setFont(QFont('SansSerif', 10))
-        qbtn = QPushButton('Quit', self)
-        qbtn.setToolTip('This is a <b>QPushButton</b> widget')
-        qbtn.clicked.connect(QCoreApplication.instance().quit)
-        qbtn.resize(qbtn.sizeHint())
-        qbtn.move(50, 50)
-        self.setGeometry(300, 300, WidgetWidth, WidgetHeight)
-        self.setWindowTitle('%s %s' % (ProgName, ProgVersion))
+        self.receiver = RM.Receive(self.receive_q)
+        self.receiver.start()
+
+    def initUI(self):
+        self.display = display.Display()
+        left_button = QPushButton('Left ⬅', self)
+        right_button = QPushButton('Right ➡', self)
+
+        hbox1 = QHBoxLayout()
+        hbox1.addWidget(self.display)
+
+        hbox2 = QHBoxLayout()
+        hbox2.addWidget(left_button)
+        hbox2.addWidget(right_button)
+
+        vbox = QVBoxLayout()
+        vbox.addLayout(hbox1)
+        vbox.addLayout(hbox2)
+        self.setLayout(vbox)
+
+        left_button.clicked.connect(self.leftButtonClicked)
+        right_button.clicked.connect(self.rightButtonClicked)
+
+        self.setGeometry(100, 100, 800, 200)
+        self.setWindowTitle('Example of Display widget')
         self.show()
 
-    def closeEvent(self, event):
-        if self.dirty:
-            self.save()
+        # populate the display widget a bit
+        for index in range(40):
+            if index in (7, 21):
+                self.display.insert_upper('U', fg=display.Display.AnsTextBadColour)
+            else:
+                self.display.insert_upper('U', fg=display.Display.AskTextColour)
 
-    def save(self):
-        log.info('saving...')
+        for index in range(39):
+            if index in (5, 19):
+                self.display.insert_lower('L', fg=display.Display.AnsTextBadColour)
+            else:
+                self.display.insert_lower('L', fg=display.Display.AnsTextGoodColour)
+        self.display.set_highlight(40)
+        self.display.set_tooltip(0, "Expected 'A', got 'N'\nweqweqwe")
+        self.display.set_tooltip(5, 'Tooltip at index 5')
+        self.display.set_tooltip(19, "Expected 'A', got 'N'\nweqweqwe\nasdasdadasd\na\na\na\na\na")
+
+    def leftButtonClicked(self):
+        """Move highlight to the left, if possible."""
+
+        index = self.display.get_highlight()
+        if index is not None:
+            index -= 1
+            if index >= 0:
+                self.display.set_highlight(index)
+
+    def rightButtonClicked(self):
+        """Clear display, reenter new test text.."""
+
+        self.display.clear()
+
+        for index in range(25):
+            if index in (7, 21):
+                self.display.insert_upper('1', fg=display.Display.AnsTextBadColour)
+            else:
+                self.display.insert_upper('1', fg=display.Display.AskTextColour)
+
+        self.display.insert_upper(' ', fg=display.Display.AskTextColour)
+
+        for index in range(25):
+            if index in (5, 19):
+                self.display.insert_lower('8', fg=display.Display.AnsTextBadColour)
+            else:
+                self.display.insert_lower('8', fg=display.Display.AnsTextGoodColour)
+        self.display.set_highlight(10)
+        self.display.set_tooltip(0, 'Tooltip at index 0')
+        self.display.set_tooltip(5, 'Tooltip at index 5')
+        self.display.set_tooltip(19, 'Tooltip at index 19')
 
 
-# to help the befuddled user
-def usage(msg=None):
-    if msg:
-        print(('*'*80 + '\n%s\n' + '*'*80) % msg)
-    print(__doc__)
 
-# our own handler for uncaught exceptions
-def excepthook(type, value, tb):
-    msg = '\n' + '=' * 80
-    msg += '\nUncaught exception:\n'
-    msg += ''.join(traceback.format_exception(type, value, tb))
-    msg += '=' * 80 + '\n'
-    print(msg)
-    tkinter_error(msg)
 
-# plug our handler into the python system
-sys.excepthook = excepthook
-
-# parse the program params
-argv = sys.argv[1:]
-
-try:
-    (opts, args) = getopt.getopt(argv, 'd:h', ['debug=', 'help'])
-except getopt.GetoptError as err:
-    usage(err)
-    sys.exit(1)
-
-debug = 0              # assume no logging
-
-for (opt, param) in opts:
-    if opt in ['-d', '--debug']:
-        try:
-            debug = int(param)
-        except ValueError:
-            usage("-d must be followed by an integer, got '%s'" % param)
-            sys.exit(1)
-    elif opt in ['-h', '--help']:
-        usage()
-        sys.exit(0)
-
-# start the logging
-log = logger.Log(LogFile, debug)
-
-app = QApplication(args)
-ex = MainWindow(debug)
-log.debug('Starting application')
+app = QApplication(sys.argv)
+ex = MorseTrainer()
 sys.exit(app.exec_())
