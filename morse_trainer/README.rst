@@ -6,6 +6,17 @@ practice sending and receiving morse.  Besides this program you need some
 method of making audio morse sounds, such as a morse key and code practice
 oscillator.
 
+Current Status
+--------------
+
+Just shows the main display widget.  Playing morse sounds into the laptop
+microphone shows the recognized characters.  This isn't easy, as we need another
+thread just to recognize the characters and feed the recognized characters into
+the main GUI thread.
+
+TTD
+Get the display widget to shift left when full.
+
 Requirements
 ------------
 
