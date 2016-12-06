@@ -277,7 +277,7 @@ class Display(QWidget):
         width becomes small and limits the view.
         """
 
-        print('resizeEvent: e=%s' % str(e))
+        pass
 #        print('e: %s' % str(dir(e)))
 #        print('e.GraphicsSceneResize=%s' % str(e.GraphicsSceneResize))
 
@@ -291,7 +291,7 @@ class Display(QWidget):
 
         return len(self.text_lower)
 
-    def insert_upper(self, ch, index=None, fg=None):
+    def insert_upper(self, ch, fg=None):
         """Insert char at end of upper row.
 
         ch     the character to insert
@@ -301,12 +301,12 @@ class Display(QWidget):
         if fg is None:
             fg = Display.AskTextColour
 
-        if index is None:
-            self.text_upper.append((ch, fg))
-            if len(self.text_upper) > len(self.tooltips):
-                self.tooltips.append(None)
+        self.text_upper.append((ch, fg))
+#        if len(self.text_upper) > len(self.tooltips):
+#            self.tooltips.append(None)
+        self.tooltips.append(None)
 
-    def insert_lower(self, ch, index=None, fg=None):
+    def insert_lower(self, ch, fg=None):
         """Insert char at end of lower row.
 
         ch     the character to insert
@@ -316,10 +316,10 @@ class Display(QWidget):
         if fg is None:
             fg = Display.AnsTextGoodColour
 
-        if index is None:
-            self.text_lower.append((ch, fg))
-            if len(self.text_lower) > len(self.tooltips):
-                self.tooltips.append(None)
+        self.text_lower.append((ch, fg))
+#        if len(self.text_lower) > len(self.tooltips):
+#            self.tooltips.append(None)
+        self.tooltips.append(None)
 
     def set_tooltip(self, index, text):
         """"Set tooltip text at a column.
