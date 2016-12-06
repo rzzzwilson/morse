@@ -110,7 +110,6 @@ class ReadMorse:
                                         rate=ReadMorse.RATE,
                                         input=True,
                                         frames_per_buffer=ReadMorse.CHUNK)
-        print('ReadMorse.__init__: initialized')
 
     def close(self):
         self.stream.stop_stream()
@@ -126,7 +125,6 @@ class ReadMorse:
         if filename is None:
             return
 
-        print('ReadMorse.save_params: saving to file %s' % filename)
         data_dict = {
                      'self.len_dot': self.len_dot,
                      'self.len_dash': self.len_dash,
@@ -149,7 +147,6 @@ class ReadMorse:
         if filename is None:
             return
 
-        print('ReadMorse.load_params: loading from file %s' % filename)
         try:
             with open(filename, 'r') as fd:
                 data = json.load(fd)
@@ -247,7 +244,6 @@ class ReadMorse:
             (count, level) = self._get_sample(self.stream)
 
             if count > 0:
-                print('ReadMorse.read_morse: get_sample() returned (%s, %s)' % (str(count), str(level)))
                 # got a sound
                 self.max_signal = level
                 if count < 3:
