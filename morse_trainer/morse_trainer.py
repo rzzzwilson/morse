@@ -14,7 +14,7 @@ import queue
 from PyQt5.QtCore import pyqtSignal, QObject, QThread
 from PyQt5.QtWidgets import QApplication, QHBoxLayout, QVBoxLayout, QWidget
 from PyQt5.QtWidgets import QPushButton, QMessageBox
-import morse
+import receive_morse
 import display
 import logger
 log = logger.Log('debug.log', logger.Log.DEBUG)
@@ -57,17 +57,17 @@ class MorseReader(QThread):
         self.params_file = params_file
         self.running = False
 
-        self.morse = morse.ReadMorse()
+        self.receive_morse = receive_morse.ReadMorse()
         if self.params_file:
             log('Loading params from %s' % self.params_file)
-            self.morse.load_params(self.params_file)
+            self.receive_morse.load_params(self.params_file)
 
 #    def __del__(self):
 #        log('__del__')
 #        # save updated params
 #        if self.params_file:
 #            log('Saving params to %s' % self.params_file)
-#            self.morse.save_params(self.params_file)
+#            self.receive_morse.save_params(self.params_file)
 #        # close morse reader
 #        self.running = False
 #        self.wait()
@@ -75,7 +75,7 @@ class MorseReader(QThread):
     def close(self):
         if self.params_file:
             log('Saving params to %s' % self.params_file)
-            self.morse.save_params(self.params_file)
+            self.receive_morse.save_params(self.params_file)
         log('Stopping thread')
         self.running = False
         self.wait(500)
@@ -84,7 +84,7 @@ class MorseReader(QThread):
     def run(self):
         self.running = True
         while self.running:
-            char = self.morse.read_morse()
+            char = self.receive_morse.read_morse()
             log('found: %s' % char)
             if len(char) == 1:
                 self.sig_obj.morse_char.emit(char)
