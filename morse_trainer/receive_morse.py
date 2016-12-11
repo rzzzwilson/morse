@@ -292,10 +292,6 @@ if __name__ == '__main__':
     import sys
     import os
     import getopt
-    import logger
-
-    # start the logging
-    log = logger.Log('morse.log', logger.Log.DEBUG)
 
     # get program name from sys.argv
     prog_name = sys.argv[0]
@@ -354,7 +350,6 @@ if __name__ == '__main__':
     while True:
         try:
             char = morse.read_morse()
-            log('loop: char=%s' % char)
             emit(char)
         except KeyboardInterrupt:
             emit('\nFinished\n')

@@ -35,10 +35,6 @@ import math
 import numpy as np
 import pyaudio
 
-import logger
-# start the logging
-log = logger.Log('send_morse.log', logger.Log.DEBUG)
-
 
 class SendMorse:
 
@@ -146,17 +142,11 @@ class SendMorse:
         """
 
         dot_time = (1.2 / cwpm)
-        log('farnsworth: wpm=%d, cwpm=%d, dot_time=%.1fms' % (wpm, cwpm, 1000*dot_time))
-
         word_time_cwpm = 60 / cwpm
         word_time_wpm = 60 / wpm
-        log('farnsworth: word_time_cwpm=%.1fms' % (1000*word_time_cwpm))
-        log('farnsworth: word_time_wpm=%.1fms' % (1000*word_time_wpm))
 
         delta_per_word = word_time_wpm - word_time_cwpm
-        log('farnsworth: delta_per_word=%.1fms' % (1000*delta_per_word))
         stretched_dot_time = dot_time + delta_per_word/19
-        log('farnsworth: stretched_dot_time=%.1fms' % (1000*stretched_dot_time))
 
         return (dot_time, stretched_dot_time)
 
@@ -175,13 +165,8 @@ class SendMorse:
             SendMorse.SampleRate
         """
 
-        log('create_sounds: SendMorse.SampleRate=%d' % SendMorse.SampleRate)
-
         # calculate dot and dash times, normal and Farnsworth
         (dot_time, dot_time_f) = self.farnsworth_times(self.cwpm, self.wpm)
-
-        log('create_sounds: .cwpm=%d, .wpm=%d, dot_time=%.1fms, dot_time_f=%.1fms'
-                % (self.cwpm, self.wpm, dot_time*1000, dot_time_f*1000))
 
         dash_time = 3 * dot_time
         inter_elem_time = dot_time
@@ -193,20 +178,11 @@ class SendMorse:
             inter_char_time = 3 * dot_time_f
             inter_word_time = 7 * dot_time_f
 
-        log('create_sounds: dot_time=%.1fms, dash_time=%.1fms, inter_char_time=%.1fms, inter_word_time=%.1fms'
-                % (dot_time*1000, dash_time*1000, inter_char_time*1000, inter_word_time*1000))
-
         self.dot_sound = self.make_tone(dot_time, volume=self.volume)
         self.dash_sound = self.make_tone(dash_time, volume=self.volume)
         self.inter_element_silence = self.make_tone(inter_elem_time, volume=0.0)
         self.inter_char_silence = self.make_tone(inter_char_time, volume=0.0)
         self.inter_word_silence = self.make_tone(inter_word_time, volume=0.0)
-
-        log('create_sounds: len(self.dot_sound)=%d' % len(self.dot_sound))
-        log('create_sounds: len(self.dash_sound)=%d' % len(self.dash_sound))
-        log('create_sounds: len(self.inter_element_silence)=%d' % len(self.inter_element_silence))
-        log('create_sounds: len(self.inter_char_silence)=%d' % len(self.inter_char_silence))
-        log('create_sounds: len(self.inter_word_silence)=%d' % len(self.inter_word_silence))
 
     def set_speeds(self, cwpm=None, wpm=None):
         """Set morse speeds."""
@@ -254,7 +230,7 @@ class SendMorse:
                         self.stream.write(self.dash_sound)
                     self.stream.write(self.inter_element_silence)
             else:
-                log("Unrecognized character '%s' in morse to send" % char)
+                print("Unrecognized character '%s' in morse to send" % char)
 
             self.stream.write(self.inter_word_silence)
 
