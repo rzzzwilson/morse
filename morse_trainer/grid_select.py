@@ -7,26 +7,23 @@ A PyQt5 custom widget used by Morse Trainer.
 GridSelect a grid of characters.  The user may select/deselect each character
 and the display shows if the character is selected or deselected.
 
-The state of the characters is returned as a dictionary:
-    d = {'A': True, 'B': False, ...}
-
 grid_select = GridSelect(data, max_cols=12)
 
 d = grid_select.get_status()
 grid_select.set_status(d)
 
+The state of the characters is returned (and set) as a dictionary:
+    d = {'A': True, 'B': False, ...}
+
+Raises a '.changed' signal on any state change.
+
 """
 
 import platform
-import logger
 
-from PyQt5.QtWidgets import QWidget, QTableWidget, QPushButton, QMessageBox, QToolButton
-from PyQt5.QtWidgets import QToolTip, QGroupBox, QGridLayout, QFrame, QLabel
-from PyQt5.QtCore import QObject, Qt, pyqtSignal, QPoint
-from PyQt5.QtGui import QPainter, QFont, QColor, QPen
-
-
-log = logger.Log('grid_select.log', logger.Log.DEBUG)
+from PyQt5.QtWidgets import QWidget, QPushButton, QGridLayout
+from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtGui import QFont
 
 
 class GridSelect(QWidget):
@@ -60,6 +57,10 @@ class GridSelect(QWidget):
     else:
         raise Exception('Unrecognized platform: %s' % platform.system())
 
+    # signal raised when internal state changes
+    changed = pyqtSignal()
+
+
     def __init__(self, data, max_cols=12):
         """Initialize the widget.
 
@@ -82,11 +83,13 @@ class GridSelect(QWidget):
         self.font = None            # the font used
         self.font_size = None       # size of font
 
+        # set up the UI
         self.initUI()
 
     def initUI(self):
         """Set up the UI."""
 
+        # automatically fill widget with system colours on redraw
         self.setAutoFillBackground(True)
 
         # calculate the number of rows and columns to display
@@ -130,12 +133,16 @@ class GridSelect(QWidget):
     def clickButton(self, event):
         """Handle user selecting a grid button.
 
-        Update the self.status dictionary.
+        Update the self.status dictionary and emit a 'changed' signal.
         """
 
+        # update the internal status dictionary
         source = self.sender()
         label = source.text()
         self.status[label] = not self.status[label]
+
+        # emit a 'changed' signal
+        self.changed.emit()
 
     def x2index(self, x, y):
         """Convert widget x,y coordinate to row,column indices.
@@ -163,10 +170,14 @@ class GridSelect(QWidget):
     def set_status(self, status):
         """Set widget selection according to status dictionary."""
 
+        # set status and state of each button
         for button in self.buttons:
             label = button.text()
             button.setChecked(status[label])
             self.status[label] = status[label]
+
+        # tell the world that we've changed
+        self.changed.emit()
 
 
 if __name__ == '__main__':
@@ -185,7 +196,7 @@ if __name__ == '__main__':
             self.display_alphabet = GridSelect('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
             self.display_numbers = GridSelect('0123456789')
             self.display_punctuation = GridSelect("""?/,.():;!'"=""")
-            invert_button = QPushButton('Invert Selection', self)
+            invert_button = QPushButton('Invert Selections', self)
 
             hbox1 = QHBoxLayout()
             hbox1.addWidget(self.display_alphabet)
@@ -202,6 +213,10 @@ if __name__ == '__main__':
 
             invert_button.clicked.connect(self.invertButtonClicked)
 
+            self.display_alphabet.changed.connect(self.changeAlphabetHandler)
+            self.display_numbers.changed.connect(self.changeNumbersHandler)
+            self.display_punctuation.changed.connect(self.changePunctuationHandler)
+
             self.setGeometry(100, 100, 800, 200)
             self.setWindowTitle('Example of GridSelect widget')
             self.show()
@@ -213,6 +228,15 @@ if __name__ == '__main__':
                 selection = gd.get_status()
                 inverted = {key:(not value) for (key, value) in selection.items()}
                 gd.set_status(inverted)
+
+        def changeAlphabetHandler(self):
+            print('Alphabet has changed')
+
+        def changeNumbersHandler(self):
+            print('Numbers has changed')
+
+        def changePunctuationHandler(self):
+            print('Punctuation has changed')
 
 
     app = QApplication(sys.argv)
