@@ -13,13 +13,14 @@ The state of the characters is returned as a dictionary:
 grid_select = GridSelect(data, max_cols=12)
 
 d = grid_select.get_status()
+grid_select.set_status(d)
 
 """
 
 import platform
 import logger
 
-from PyQt5.QtWidgets import QWidget, QTableWidget, QPushButton, QMessageBox
+from PyQt5.QtWidgets import QWidget, QTableWidget, QPushButton, QMessageBox, QToolButton
 from PyQt5.QtWidgets import QToolTip, QGroupBox, QGridLayout, QFrame, QLabel
 from PyQt5.QtCore import QObject, Qt, pyqtSignal, QPoint
 from PyQt5.QtGui import QPainter, QFont, QColor, QPen
@@ -73,6 +74,8 @@ class GridSelect(QWidget):
 
         # declare state variables here so we know what they all are
         self.data = data            # the characters to display
+        self.buttons = []           # list of display item button objects
+        self.status = {}            # status dict: {'A':True, 'B':False, ...}
         self.max_cols = max_cols    # maximum number of columns to display
         self.num_rows = None        # number of rows in grid
         self.num_cols = None        # number of columns in grid
@@ -80,9 +83,6 @@ class GridSelect(QWidget):
         self.font_size = None       # size of font
 
         self.initUI()
-
-        # force a draw
-#        self.update()
 
     def initUI(self):
         """Set up the UI."""
@@ -98,15 +98,11 @@ class GridSelect(QWidget):
             self.num_cols = num_chars
             self.num_rows = 1
 
-        log('initUI: .num_cols=%s, .num_rows=%s' % (str(self.num_cols), str(self.num_rows)))
-
         # figure out the widget size
         widget_width = (2*GridSelect.LeftOffset
                         + self.num_cols*GridSelect.ColWidth)
         widget_height = (2*GridSelect.TopOffset
                          + self.num_rows*GridSelect.RowHeight)
-
-        log('initUI: widget_width=%d, widget_height=%d' % (widget_width, widget_height))
 
         self.setFixedWidth(widget_width)
         self.setFixedHeight(widget_height)
@@ -117,52 +113,29 @@ class GridSelect(QWidget):
         self.font_size = GridSelect.FontSize
 
         # draw the characters in the grid, with surround highlight
-        positions = [(i,j) for i in range(self.num_rows) for j in range(self.num_cols)]
-        log('positions=%s' % str(positions))
         grid = QGridLayout(self)
         self.setLayout(grid)
+
+        positions = [(i,j) for i in range(self.num_rows) for j in range(self.num_cols)]
+        self.buttons = []
+
         for (char, pos) in zip(self.data, positions):
+            self.status[char] = False
             button = QPushButton(char, self)
-            log('button.? = %s' % str(dir(button)))
+            self.buttons.append(button)
             button.setCheckable(True)       # make it a toggle button
             grid.addWidget(button, *pos)
+            button.clicked.connect(self.clickButton)
 
-    def mousePressEvent(self, e):
-        """Left click handler - decide which character clicked, if any."""
+    def clickButton(self, event):
+        """Handle user selecting a grid button.
 
-        # coding for e.button() and e.type() values
-        # button = {1:'left', 2:'right', 4:'middle'}
-        # type = {2:'single', 4:'double'}
+        Update the self.status dictionary.
+        """
 
-        log('mousePressEvent: mouse click, e.button()=%d, e.type()=%d'
-            % (e.button(), e.type()))
-
-        # single click, left button, show tooltip, if any at position
-        if e.type() == 2 and e.button() == 1:
-            log('mousePressEvent: left single mouse click')
-
-            # figure out what index test we clicked on
-            indices = self.x2index(e.x(), e.y())
-            log('mousePressEvent: indices=%s' % str(indices))
-            if indices:
-                (row, col) = indices
-
-                # check - the last row may be short
-                if row == self.num_rows - 1:
-                    # we ARE on the last row, check X position
-                    if (self.num_cols * row) + col < len(self.data):
-                        # clicked on a cell
-                        log('mousePressEvent: left click at %s' % str(indices))
-                        print('mousePressEvent: left click at %s' % str(indices))
-                    else:
-                        log('mousePressEvent: clicked off a cell')
-                        print('mousePressEvent: clicked off a cell')
-                else:
-                    log('mousePressEvent: left click at %s' % str(indices))
-                    print('mousePressEvent: left click at %s' % str(indices))
-            else:
-                log('mousePressEvent: clicked off a cell')
-                print('mousePressEvent: clicked off a cell')
+        source = self.sender()
+        label = source.text()
+        self.status[label] = not self.status[label]
 
     def x2index(self, x, y):
         """Convert widget x,y coordinate to row,column indices.
@@ -182,68 +155,19 @@ class GridSelect(QWidget):
 
         return (row, col)
 
-#    def paintEvent(self, e):
-#        """Prepare to draw the widget."""
-#
-#        qp = QPainter()
-#        qp.begin(self)
-#        self.drawWidget(qp)
-#        qp.end()
-#
-#    def drawWidget(self, qp):
-#        """Draw the widget from internal state."""
-#
-#        # set to the font we use in the widget
-#        qp.setFont(self.font)
-#
-#        # figure out display size
-#        window_size = self.size()
-#        width = window_size.width()
-#        height = window_size.height()
-#        self.display_width = width
-#
-#        # draw some squares
-##        for i in range(self.num_cols):
-##            self.draw_square(qp,
-##                             GridSelect.LeftOffset+i*GridSelect.ColWidth,
-##                             GridSelect.TopOffset, i%8)
-#
-##        qp.setPen(GridSelect.WidgetBGColour)
-##        qp.setBrush(GridSelect.WidgetBGColour)
-##        qp.drawRect(0, 0, width, height)
-#
-#        qp.setPen(Qt.black)
-#        qp.drawRect(0, 0, width, height)
+    def get_status(self):
+        """Return widget selection status as a dictionary."""
 
+        return self.status
 
-    def draw_square(self, qp, x, y, shape):
+    def set_status(self, status):
+        """Set widget selection according to status dictionary."""
 
-        colorTable = [0x666666, 0xCC6666, 0x66CC66, 0x6666CC,
-                      0xCCCC66, 0xCC66CC, 0x66CCCC, 0xDAAA00]
+        for button in self.buttons:
+            label = button.text()
+            button.setChecked(status[label])
+            self.status[label] = status[label]
 
-#        log('draw_square: x=%d, y=%d, shape=%d' % (x, y, shape))
-#        log('draw_square: .num_cols=%d, .ColWidth=%d, .RowHeight=%d' % (self.num_cols, GridSelect.ColWidth, GridSelect.RowHeight))
-
-        color = QColor(colorTable[shape])
-        qp.fillRect(x, y, GridSelect.ColWidth - 1, GridSelect.RowHeight - 1, color)
-#        log('draw_square: COLOUR .fillRect(%d, %d, %d, %d)'
-#                % (x, y, GridSelect.ColWidth - 1, GridSelect.RowHeight - 1))
-
-        qp.setPen(color.lighter())
-        qp.drawLine(x, y + GridSelect.RowHeight - 1, x, y)
-#        log('draw_square: LIGHTER .drawLine(%d, %d, %d, %d)' % (x, y + GridSelect.RowHeight - 1, x, y))
-        qp.drawLine(x, y, x + GridSelect.ColWidth - 1, y)
-#        log('draw_square: LIGHTER .drawLine(%d, %d, %d, %d)' % (x, y, x + GridSelect.ColWidth - 1, y))
-
-        qp.setPen(color.darker())
-        qp.drawLine(x + 1, y + GridSelect.RowHeight - 1,
-            x + GridSelect.ColWidth - 1, y + GridSelect.RowHeight - 1)
-#        log('draw_square: DARKER .drawLine(%d, %d, %d, %d)' % (x + 1, y + GridSelect.RowHeight - 1,
-#                x + GridSelect.ColWidth - 1, y + GridSelect.RowHeight - 1))
-        qp.drawLine(x + GridSelect.ColWidth - 1,
-            y + GridSelect.RowHeight - 1, x + GridSelect.ColWidth - 1, y + 1)
-#        log('draw_square: DARKER .drawLine(%d, %d, %d, %d)' % (x + GridSelect.ColWidth - 1,
-#                y + GridSelect.RowHeight - 1, x + GridSelect.ColWidth - 1, y + 1))
 
 if __name__ == '__main__':
     import sys
@@ -261,8 +185,7 @@ if __name__ == '__main__':
             self.display_alphabet = GridSelect('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
             self.display_numbers = GridSelect('0123456789')
             self.display_punctuation = GridSelect("""?/,.():;!'"=""")
-            left_button = QPushButton('Left ⬅', self)
-            right_button = QPushButton('Right ➡', self)
+            invert_button = QPushButton('Invert Selection', self)
 
             hbox1 = QHBoxLayout()
             hbox1.addWidget(self.display_alphabet)
@@ -270,30 +193,26 @@ if __name__ == '__main__':
             hbox1.addWidget(self.display_punctuation)
 
             hbox2 = QHBoxLayout()
-            hbox2.addWidget(left_button)
-            hbox2.addWidget(right_button)
+            hbox2.addWidget(invert_button)
 
             vbox = QVBoxLayout()
             vbox.addLayout(hbox1)
             vbox.addLayout(hbox2)
             self.setLayout(vbox)
 
-            left_button.clicked.connect(self.leftButtonClicked)
-            right_button.clicked.connect(self.rightButtonClicked)
+            invert_button.clicked.connect(self.invertButtonClicked)
 
             self.setGeometry(100, 100, 800, 200)
             self.setWindowTitle('Example of GridSelect widget')
             self.show()
 
-        def leftButtonClicked(self):
-            """Move highlight to the left, if possible."""
+        def invertButtonClicked(self):
+            """Get alphabet (and others) selection, invert, put back."""
 
-            pass
-
-        def rightButtonClicked(self):
-            """Clear display, reenter new test text.."""
-
-            pass
+            for gd in (self.display_alphabet, self.display_numbers, self.display_punctuation):
+                selection = gd.get_status()
+                inverted = {key:(not value) for (key, value) in selection.items()}
+                gd.set_status(inverted)
 
 
     app = QApplication(sys.argv)
