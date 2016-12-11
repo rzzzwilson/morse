@@ -10,7 +10,7 @@ and the display shows if the character is selected or deselected.
 The state of the characters is returned as a dictionary:
     d = {'A': True, 'B': False, ...}
 
-grid_select = GridSelect(data, max_cols=10)
+grid_select = GridSelect(data, max_cols=12)
 
 d = grid_select.get_status()
 
@@ -20,7 +20,7 @@ import platform
 import logger
 
 from PyQt5.QtWidgets import QWidget, QTableWidget, QPushButton, QMessageBox
-from PyQt5.QtWidgets import QToolTip
+from PyQt5.QtWidgets import QToolTip, QGroupBox, QGridLayout, QFrame, QLabel
 from PyQt5.QtCore import QObject, Qt, pyqtSignal, QPoint
 from PyQt5.QtGui import QPainter, QFont, QColor, QPen
 
@@ -33,36 +33,33 @@ class GridSelect(QWidget):
 
     # set platform-dependent sizes
     if platform.system() == 'Linux':
+        MaxColumns = 12             # default max number of columns
         Font = 'Courier'            # the font to use
         FontSize = 12               # font size
         TopOffset = 5               # top offset of first row
         LeftOffset = 5              # left offset of first column
-        RowHeight = 15              # pixel height of a row
-        ColWidth = 15               # pixel width of a column
-        WidgetBGColour = Qt.white   # background colour
-        RoundRadius = 3            # radius of rounded rect corners
+        RowHeight = 25              # pixel height of a row
+        ColWidth = 25               # pixel width of a column
     elif platform.system() == 'Darwin':
+        MaxColumns = 12
         Font = 'Courier'
         FontSize = 12
         TopOffset = 5
         LeftOffset = 5
-        RowHeight = 15
-        ColWidth = 15
-        WidgetBGColour = Qt.white
-        RoundRadius = 3
+        RowHeight = 20
+        ColWidth = 20
     elif platform.system() == 'Windows':
+        MaxColumns = 12
         Font = 'Courier'
         FontSize = 12
         TopOffset = 5
         LeftOffset = 5
-        RowHeight = 15
-        ColWidth = 15
-        WidgetBGColour = Qt.white
-        RoundRadius = 3
+        RowHeight = 25
+        ColWidth = 25
     else:
         raise Exception('Unrecognized platform: %s' % platform.system())
 
-    def __init__(self, data, max_cols=10):
+    def __init__(self, data, max_cols=12):
         """Initialize the widget.
 
         data  a string of characters to be displayed in the widget
@@ -85,10 +82,12 @@ class GridSelect(QWidget):
         self.initUI()
 
         # force a draw
-        self.update()
+#        self.update()
 
     def initUI(self):
         """Set up the UI."""
+
+        self.setAutoFillBackground(True)
 
         # calculate the number of rows and columns to display
         num_chars = len(self.data)
@@ -118,6 +117,15 @@ class GridSelect(QWidget):
         self.font_size = GridSelect.FontSize
 
         # draw the characters in the grid, with surround highlight
+        positions = [(i,j) for i in range(self.num_rows) for j in range(self.num_cols)]
+        log('positions=%s' % str(positions))
+        grid = QGridLayout(self)
+        self.setLayout(grid)
+        for (char, pos) in zip(self.data, positions):
+            button = QPushButton(char, self)
+            log('button.? = %s' % str(dir(button)))
+            button.setCheckable(True)       # make it a toggle button
+            grid.addWidget(button, *pos)
 
     def mousePressEvent(self, e):
         """Left click handler - decide which character clicked, if any."""
@@ -174,34 +182,68 @@ class GridSelect(QWidget):
 
         return (row, col)
 
-    def paintEvent(self, e):
-        """Prepare to draw the widget."""
+#    def paintEvent(self, e):
+#        """Prepare to draw the widget."""
+#
+#        qp = QPainter()
+#        qp.begin(self)
+#        self.drawWidget(qp)
+#        qp.end()
+#
+#    def drawWidget(self, qp):
+#        """Draw the widget from internal state."""
+#
+#        # set to the font we use in the widget
+#        qp.setFont(self.font)
+#
+#        # figure out display size
+#        window_size = self.size()
+#        width = window_size.width()
+#        height = window_size.height()
+#        self.display_width = width
+#
+#        # draw some squares
+##        for i in range(self.num_cols):
+##            self.draw_square(qp,
+##                             GridSelect.LeftOffset+i*GridSelect.ColWidth,
+##                             GridSelect.TopOffset, i%8)
+#
+##        qp.setPen(GridSelect.WidgetBGColour)
+##        qp.setBrush(GridSelect.WidgetBGColour)
+##        qp.drawRect(0, 0, width, height)
+#
+#        qp.setPen(Qt.black)
+#        qp.drawRect(0, 0, width, height)
 
-        qp = QPainter()
-        qp.begin(self)
-        self.drawWidget(qp)
-        qp.end()
 
-    def drawWidget(self, qp):
-        """Draw the widget from internal state."""
+    def draw_square(self, qp, x, y, shape):
 
-        # set to the font we use in the widget
-        qp.setFont(self.font)
+        colorTable = [0x666666, 0xCC6666, 0x66CC66, 0x6666CC,
+                      0xCCCC66, 0xCC66CC, 0x66CCCC, 0xDAAA00]
 
-        # figure out display size
-        window_size = self.size()
-        width = window_size.width()
-        height = window_size.height()
-        self.display_width = width
+#        log('draw_square: x=%d, y=%d, shape=%d' % (x, y, shape))
+#        log('draw_square: .num_cols=%d, .ColWidth=%d, .RowHeight=%d' % (self.num_cols, GridSelect.ColWidth, GridSelect.RowHeight))
 
-        qp.setPen(GridSelect.WidgetBGColour)
-        qp.setBrush(GridSelect.WidgetBGColour)
-        qp.drawRect(0, 0, width, height)
+        color = QColor(colorTable[shape])
+        qp.fillRect(x, y, GridSelect.ColWidth - 1, GridSelect.RowHeight - 1, color)
+#        log('draw_square: COLOUR .fillRect(%d, %d, %d, %d)'
+#                % (x, y, GridSelect.ColWidth - 1, GridSelect.RowHeight - 1))
 
-        qp.setPen(Qt.black)
-        qp.drawRoundedRect(0, 0, width, height,
-                           GridSelect.RoundRadius, GridSelect.RoundRadius)
+        qp.setPen(color.lighter())
+        qp.drawLine(x, y + GridSelect.RowHeight - 1, x, y)
+#        log('draw_square: LIGHTER .drawLine(%d, %d, %d, %d)' % (x, y + GridSelect.RowHeight - 1, x, y))
+        qp.drawLine(x, y, x + GridSelect.ColWidth - 1, y)
+#        log('draw_square: LIGHTER .drawLine(%d, %d, %d, %d)' % (x, y, x + GridSelect.ColWidth - 1, y))
 
+        qp.setPen(color.darker())
+        qp.drawLine(x + 1, y + GridSelect.RowHeight - 1,
+            x + GridSelect.ColWidth - 1, y + GridSelect.RowHeight - 1)
+#        log('draw_square: DARKER .drawLine(%d, %d, %d, %d)' % (x + 1, y + GridSelect.RowHeight - 1,
+#                x + GridSelect.ColWidth - 1, y + GridSelect.RowHeight - 1))
+        qp.drawLine(x + GridSelect.ColWidth - 1,
+            y + GridSelect.RowHeight - 1, x + GridSelect.ColWidth - 1, y + 1)
+#        log('draw_square: DARKER .drawLine(%d, %d, %d, %d)' % (x + GridSelect.ColWidth - 1,
+#                y + GridSelect.RowHeight - 1, x + GridSelect.ColWidth - 1, y + 1))
 
 if __name__ == '__main__':
     import sys
@@ -216,12 +258,16 @@ if __name__ == '__main__':
 
 
         def initUI(self):
-            self.display = GridSelect('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+            self.display_alphabet = GridSelect('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+            self.display_numbers = GridSelect('0123456789')
+            self.display_punctuation = GridSelect("""?/,.():;!'"=""")
             left_button = QPushButton('Left ⬅', self)
             right_button = QPushButton('Right ➡', self)
 
             hbox1 = QHBoxLayout()
-            hbox1.addWidget(self.display)
+            hbox1.addWidget(self.display_alphabet)
+            hbox1.addWidget(self.display_numbers)
+            hbox1.addWidget(self.display_punctuation)
 
             hbox2 = QHBoxLayout()
             hbox2.addWidget(left_button)
