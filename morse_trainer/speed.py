@@ -3,6 +3,7 @@
 
 """
 A PyQt5 custom widget used by Morse Trainer.
+
 Used to select character and word speeds.
 
 speed = SpeedGroup()
@@ -98,37 +99,3 @@ class SpeedGroup(QWidget):
         """Return the speeds as a tuple: (word_speed, char_speed)."""
 
         return (self.spb_words.value(), self.spb_chars.value())
-
-
-if __name__ == '__main__':
-    import sys
-    from PyQt5.QtWidgets import QApplication
-
-    class SpeedGroupExample(QWidget):
-        """Application to demonstrate the Morse Trainer 'display' widget."""
-
-        def __init__(self):
-            super().__init__()
-            self.initUI()
-
-
-        def initUI(self):
-            self.speed_group = SpeedGroup()
-
-            hbox = QHBoxLayout()
-            hbox.addWidget(self.speed_group)
-            self.setLayout(hbox)
-
-            self.setWindowTitle('Example of SpeedGroup widget')
-            self.show()
-
-            # connect the widget to '.changed' event handler
-            self.speed_group.changed.connect(self.speed_changed)
-
-        def speed_changed(self):
-            print('changed speeds, wwpm=%d, cwpm=%d' % self.speed_group.getSpeeds())
-
-
-    app = QApplication(sys.argv)
-    ex = SpeedGroupExample()
-    sys.exit(app.exec())

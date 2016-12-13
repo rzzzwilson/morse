@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Code to test the 'Receive' group.
+The 'receive group' widget.
 """
 
 from PyQt5.QtWidgets import *

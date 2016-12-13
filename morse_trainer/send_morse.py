@@ -29,7 +29,6 @@ morse.close()
 
 """
 
-
 import sys
 import math
 import numpy as np
@@ -37,6 +36,7 @@ import pyaudio
 
 
 class SendMorse:
+    """Send well-formed morse code to the spakers."""
 
     # the default settings
     DefaultCWPM = 10             # character speed (characters per minute)
@@ -94,7 +94,6 @@ class SendMorse:
         self.inter_word_silence = None
 
         # create sounds at default speeds
-        #self.create_one_cycle()
         self.create_sounds()
 
         # prepare the audio device
@@ -102,16 +101,12 @@ class SendMorse:
         self.stream = self.pyaudio.open(format=SendMorse.Format,
                                         channels=1,
                                         rate=SendMorse.SampleRate,
-                                        #frames_per_buffer=len(self.one_cycle),
                                         output=True)
 
     def close(self):
         self.stream.stop_stream()
         self.stream.close()
         self.pyaudio.terminate()
-
-    def __del__(self):
-        print('')
 
     def make_tone(self, duration, volume):
         """Create a strin full of sinewave data.
@@ -233,55 +228,3 @@ class SendMorse:
                 print("Unrecognized character '%s' in morse to send" % char)
 
             self.stream.write(self.inter_word_silence)
-
-
-if __name__ == '__main__':
-    import sys
-    import os
-    import getopt
-
-    # get program name from sys.argv
-    prog_name = sys.argv[0]
-    if prog_name.endswith('.py'):
-        prog_name = prog_name[:-3]
-
-    def usage(msg=None):
-        if msg:
-            print(('*'*80 + '\n%s\n' + '*'*80) % msg)
-        print("\n"
-              "CLI program to send morse strings from CLI input.\n\n"
-              "Usage: send_morse [-h]\n\n"
-              "where -h  means priont this help and stop")
-
-
-    # parse the CLI params
-    argv = sys.argv[1:]
-
-    try:
-        (opts, args) = getopt.getopt(argv, 'h', ['help'])
-    except getopt.GetoptError as err:
-        usage(err)
-        sys.exit(1)
-
-    for (opt, param) in opts:
-        if opt in ['-h', '--help']:
-            usage()
-            sys.exit(0)
-
-    morse = SendMorse()
-    cwpm = 25
-    wpm = 15
-    morse.set_speeds(cwpm=cwpm, wpm=wpm)
-
-    (cwpm, wpm) = morse.get_speeds()
-    prompt = '%d/%d> ' % (cwpm, wpm)
-
-    while True:
-        try:
-            code = input(prompt)
-        except (EOFError, KeyboardInterrupt):
-            sys.exit(0)
-
-        if not code:
-            break
-        morse.send(code)

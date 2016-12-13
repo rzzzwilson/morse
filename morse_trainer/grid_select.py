@@ -4,7 +4,7 @@
 """
 A PyQt5 custom widget used by Morse Trainer.
 
-GridSelect a grid of characters.  The user may select/deselect each character
+Shows a grid of characters.  The user may select/deselect each character
 and the display shows if the character is selected or deselected.
 
 grid_select = GridSelect(data, max_cols=12)
@@ -16,7 +16,6 @@ The state of the characters is returned (and set) as a dictionary:
     d = {'A': True, 'B': False, ...}
 
 Raises a '.changed' signal on any state change.
-
 """
 
 import platform
@@ -119,7 +118,8 @@ class GridSelect(QWidget):
         grid = QGridLayout(self)
         self.setLayout(grid)
 
-        positions = [(i,j) for i in range(self.num_rows) for j in range(self.num_cols)]
+        positions = [(i,j) for i in range(self.num_rows)
+                               for j in range(self.num_cols)]
         self.buttons = []
 
         for (char, pos) in zip(self.data, positions):
@@ -178,67 +178,3 @@ class GridSelect(QWidget):
 
         # tell the world that we've changed
         self.changed.emit()
-
-
-if __name__ == '__main__':
-    import sys
-    from PyQt5.QtWidgets import QApplication, QHBoxLayout, QVBoxLayout
-
-    class GridSelectExample(QWidget):
-        """Application to demonstrate the Morse Trainer 'display' widget."""
-
-        def __init__(self):
-            super().__init__()
-            self.initUI()
-
-
-        def initUI(self):
-            self.display_alphabet = GridSelect('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
-            self.display_numbers = GridSelect('0123456789')
-            self.display_punctuation = GridSelect("""?/,.():;!'"=""")
-            invert_button = QPushButton('Invert Selections', self)
-
-            hbox1 = QHBoxLayout()
-            hbox1.addWidget(self.display_alphabet)
-            hbox1.addWidget(self.display_numbers)
-            hbox1.addWidget(self.display_punctuation)
-
-            hbox2 = QHBoxLayout()
-            hbox2.addWidget(invert_button)
-
-            vbox = QVBoxLayout()
-            vbox.addLayout(hbox1)
-            vbox.addLayout(hbox2)
-            self.setLayout(vbox)
-
-            invert_button.clicked.connect(self.invertButtonClicked)
-
-            self.display_alphabet.changed.connect(self.changeAlphabetHandler)
-            self.display_numbers.changed.connect(self.changeNumbersHandler)
-            self.display_punctuation.changed.connect(self.changePunctuationHandler)
-
-            self.setGeometry(100, 100, 800, 200)
-            self.setWindowTitle('Example of GridSelect widget')
-            self.show()
-
-        def invertButtonClicked(self):
-            """Get alphabet (and others) selection, invert, put back."""
-
-            for gd in (self.display_alphabet, self.display_numbers, self.display_punctuation):
-                selection = gd.get_status()
-                inverted = {key:(not value) for (key, value) in selection.items()}
-                gd.set_status(inverted)
-
-        def changeAlphabetHandler(self):
-            print('Alphabet has changed')
-
-        def changeNumbersHandler(self):
-            print('Numbers has changed')
-
-        def changePunctuationHandler(self):
-            print('Punctuation has changed')
-
-
-    app = QApplication(sys.argv)
-    ex = GridSelectExample()
-    sys.exit(app.exec_())

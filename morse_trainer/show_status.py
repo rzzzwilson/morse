@@ -100,8 +100,10 @@ class ShowStatus(QWidget):
 
         # figure out the widget size
         widget_width = (ShowStatus.LeftMargin + num_chars*ShowStatus.BarWidth
-                        + (num_chars-1)*ShowStatus.InterBarMargin + ShowStatus.RightMargin)
-        widget_height = (ShowStatus.TopMargin + ShowStatus.BarHeight + ShowStatus.BottomMargin)
+                        + (num_chars-1)*ShowStatus.InterBarMargin
+                        + ShowStatus.RightMargin)
+        widget_height = (ShowStatus.TopMargin + ShowStatus.BarHeight
+                         + ShowStatus.BottomMargin)
 
         self.setFixedWidth(widget_width)
         self.setFixedHeight(widget_height)
@@ -132,6 +134,7 @@ class ShowStatus(QWidget):
         # set to the font we use in the widget
         qp.setFont(self.font)
 
+#        # draw an outline (debug)
 #        qp.setPen(Qt.black)
 #        qp.drawRect(0, 0, self.widget_width, self.widget_height)
 
@@ -176,59 +179,3 @@ class ShowStatus(QWidget):
             self.percent.append(value)
 
         self.update()
-
-
-if __name__ == '__main__':
-    import sys
-    from PyQt5.QtWidgets import QApplication, QHBoxLayout, QVBoxLayout
-
-    class ShowStatusExample(QWidget):
-        """Application to demonstrate the Morse Trainer 'display' widget."""
-
-        def __init__(self):
-            super().__init__()
-            self.initUI()
-
-
-        def initUI(self):
-            self.alphabet_status = ShowStatus('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
-            self.numbers_status = ShowStatus('0123456789')
-            self.punctuation_status = ShowStatus("""?/,.():;!'"=""")
-            redisplay_button = QPushButton('Redisplay', self)
-
-            hbox1 = QHBoxLayout()
-            hbox1.addWidget(self.alphabet_status)
-            hbox1.addWidget(self.numbers_status)
-            hbox1.addWidget(self.punctuation_status)
-
-            hbox2 = QHBoxLayout()
-            hbox2.addWidget(redisplay_button)
-
-            vbox = QVBoxLayout()
-            vbox.addLayout(hbox1)
-            vbox.addLayout(hbox2)
-            self.setLayout(vbox)
-
-            redisplay_button.clicked.connect(self.redisplayButtonClicked)
-
-            self.setGeometry(100, 100, 800, 200)
-            self.setWindowTitle('Example of ShowStatus widget')
-            self.show()
-
-        def redisplayButtonClicked(self):
-            """Regenerate some data (random) and display it."""
-
-            for gd in (self.alphabet_status, self.numbers_status, self.punctuation_status):
-                # generate random data
-                new = {}
-                for char in gd.data:
-                    new[char] = randint(0,100)/100
-                # set first character to 0
-                new[gd.data[0]] = 0
-                # redisplay
-                gd.refresh(new)
-
-
-    app = QApplication(sys.argv)
-    ex = ShowStatusExample()
-    sys.exit(app.exec_())
