@@ -34,7 +34,7 @@ class ShowStatus(QWidget):
         TopMargin = 5               # top margin to bar
         LeftMargin = 5              # left margin to bar
         RightMargin = 5             # right margin to bar
-        BottomMargin = 13           # bottom margin to bar
+        BottomMargin = 14           # bottom margin to bar
         LabelBottomMargin = 3       # bottom margin to text
         LabelLeftMargin = 7         # left margin to text
         InterBarMargin = 3          # margin between bars
@@ -46,7 +46,7 @@ class ShowStatus(QWidget):
         TopMargin = 5
         LeftMargin = 5
         RightMargin = 5
-        BottomMargin = 13
+        BottomMargin = 14
         LabelBottomMargin = 3
         LabelLeftMargin = 7
         InterBarMargin = 3
@@ -58,7 +58,7 @@ class ShowStatus(QWidget):
         TopMargin = 5
         LeftMargin = 5
         RightMargin = 5
-        BottomMargin = 13
+        BottomMargin = 14
         LabelBottomMargin = 3
         LabelLeftMargin = 7
         InterBarMargin = 3
@@ -150,9 +150,10 @@ class ShowStatus(QWidget):
             qp.setBrush(Qt.blue)
             for (char, percent) in zip(self.data, self.percent):
                 pct_height = int(ShowStatus.BarHeight * percent)
+                if pct_height == 0:     # force *some* display if 0
+                    pct_height = 1
                 top_height = ShowStatus.BarHeight - pct_height
-                if pct_height > 0:
-                    qp.drawRect(x, y+top_height, ShowStatus.BarWidth, pct_height)
+                qp.drawRect(x, y+top_height, ShowStatus.BarWidth, pct_height)
                 x += ShowStatus.BarWidth + ShowStatus.InterBarMargin
 
         # draw column 'footer' header
@@ -222,6 +223,9 @@ if __name__ == '__main__':
                 new = {}
                 for char in gd.data:
                     new[char] = randint(0,100)/100
+                # set first character to 0
+                new[gd.data[0]] = 0
+                # redisplay
                 gd.refresh(new)
 
 
