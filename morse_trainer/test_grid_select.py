@@ -53,9 +53,9 @@ class GridSelectExample(QWidget):
 
         for gd in (self.display_alphabet,
                    self.display_numbers, self.display_punctuation):
-            selection = gd.get_status()
+            selection = gd.get_selection()
             inverted = {key:(not value) for (key, value) in selection.items()}
-            gd.set_status(inverted)
+            gd.set_selection(inverted)
 
     def changeAlphabetHandler(self):
         print('Alphabet has changed')

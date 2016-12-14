@@ -9,8 +9,10 @@ and the display shows if the character is selected or deselected.
 
 grid_select = GridSelect(data, max_cols=12)
 
-d = grid_select.get_status()
-grid_select.set_status(d)
+d = grid_select.get_selection()
+grid_select.set_selection(d)
+
+grid_select.clear()
 
 The state of the characters is returned (and set) as a dictionary:
     d = {'A': True, 'B': False, ...}
@@ -84,6 +86,8 @@ class GridSelect(QWidget):
 
         # set up the UI
         self.initUI()
+
+        self.clear()
 
     def initUI(self):
         """Set up the UI."""
@@ -162,19 +166,34 @@ class GridSelect(QWidget):
 
         return (row, col)
 
-    def get_status(self):
+    def get_selection(self):
         """Return widget selection status as a dictionary."""
 
         return self.status
 
-    def set_status(self, status):
+    def set_selection(self, status):
         """Set widget selection according to status dictionary."""
 
         # set status and state of each button
         for button in self.buttons:
             label = button.text()
-            button.setChecked(status[label])
-            self.status[label] = status[label]
+            new_status = True
+            try:
+                new_status = status[label]
+            except KeyError:
+                pass
+            else:
+                button.setChecked(new_status)
+                self.status[label] = new_status
 
         # tell the world that we've changed
         self.changed.emit()
+
+    def clear(self):
+        """Set all gird buttons to OFF."""
+
+        for char in self.data:
+            self.status[char] = False
+        for btn in self.buttons:
+            btn.setChecked(False)
+        self.update()

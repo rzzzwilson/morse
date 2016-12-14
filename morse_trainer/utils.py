@@ -6,6 +6,12 @@ Small utility functions.
 """
 
 
+Alphabetics = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+Numbers = '0123456789'
+Punctuation = """?/,.():;!'"="""
+Koch = """KMRSUAPTLOWI.NJE=F0Y,VG5/Q9ZH38B?427C1D6X?():;!"'"""
+
+
 def morse2display(morse):
     """Convert a string for a morse character to 'display' morse.
 
