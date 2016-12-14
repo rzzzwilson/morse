@@ -92,9 +92,6 @@ class GridSelect(QWidget):
     def initUI(self):
         """Set up the UI."""
 
-        # automatically fill widget with system colours on redraw
-        self.setAutoFillBackground(True)
-
         # calculate the number of rows and columns to display
         num_chars = len(self.data)
         if num_chars > self.max_cols:

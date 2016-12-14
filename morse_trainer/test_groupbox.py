@@ -8,8 +8,13 @@ class GroupBox(QWidget):
         QWidget.__init__(self)
         self.setWindowTitle("GroupBox")
 
+        # create all widgets
+        radiobutton1 = QRadioButton("RadioButton 1")
+        radiobutton1.setChecked(True)
+        radiobutton2 = QRadioButton("RadioButton 2")
+
+        # start layout
         layout = QGridLayout()
-        self.setLayout(layout)
 
         groupbox = QGroupBox("GroupBox Example")
         groupbox.setCheckable(True)
@@ -18,11 +23,10 @@ class GroupBox(QWidget):
         vbox = QVBoxLayout()
         groupbox.setLayout(vbox)
 
-        radiobutton = QRadioButton("RadioButton 1")
-        radiobutton.setChecked(True)
-        vbox.addWidget(radiobutton)
-        radiobutton = QRadioButton("RadioButton 2")
-        vbox.addWidget(radiobutton)
+        vbox.addWidget(radiobutton1)
+        vbox.addWidget(radiobutton2)
+
+        self.setLayout(layout)
 
 app = QApplication(sys.argv)
 screen = GroupBox()

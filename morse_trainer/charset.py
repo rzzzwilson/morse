@@ -21,7 +21,8 @@ Raises a '.changed' signal on any state change.
 
 import platform
 
-from PyQt5.QtWidgets import QWidget, QGridLayout, QButtonGroup
+from PyQt5.QtWidgets import QWidget, QGridLayout, QButtonGroup, QVBoxLayout
+from PyQt5.QtWidgets import QGroupBox
 from PyQt5.QtWidgets import QPushButton, QRadioButton, QSpinBox, QLabel
 from PyQt5.QtCore import Qt, pyqtSignal
 
@@ -90,9 +91,6 @@ class Charset(QWidget):
     def initUI(self):
         """Set up the UI."""
 
-        # automatically fill widget with system colours on redraw
-        self.setAutoFillBackground(True)
-
         # create all the sub-widgets
         self.rb_Koch = QRadioButton("Use the Koch characters")
         koch_using = QLabel('Using')
@@ -106,6 +104,10 @@ class Charset(QWidget):
         self.gs_Numbers = GridSelect(utils.Numbers)
         self.btn_Punct = QPushButton('Punctuation', self)
         self.gs_Punct = GridSelect(utils.Punctuation)
+
+        layout = QVBoxLayout()
+        groupbox = QGroupBox("Test Charset")
+        layout.addWidget(groupbox)
 
         # tie the radio buttons into a group
         rb_group = QButtonGroup(self)
@@ -144,7 +146,9 @@ class Charset(QWidget):
         grid.addWidget(self.gs_Punct, row, 2, 2, 3,
                        alignment=Qt.AlignLeft|Qt.AlignVCenter)
 
-        self.setLayout(grid)
+        groupbox.setLayout(grid)
+#        layout.addLayout(grid)
+        self.setLayout(layout)
 
         self.setWindowTitle('Test of Charset widget')
         self.show()
@@ -235,10 +239,12 @@ class Charset(QWidget):
 
         self.setKoch(False)
 
-    def changeKochNumberHandler():
+    def changeKochNumberHandler(self, signal):
         """User changed the Koch number spin box."""
 
         print('changeKochNumberHandler: got change')
+        import sys
+        sys.stdout.flush()
 
     def handleCharsetButton(self, gs):
         """Handle a click on any charset button.

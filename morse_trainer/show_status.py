@@ -92,9 +92,6 @@ class ShowStatus(QWidget):
     def initUI(self):
         """Set up the UI."""
 
-        # automatically fill widget with system colours on redraw
-        self.setAutoFillBackground(True)
-
         # calculate the number of display bars we will have
         num_chars = len(self.data)
 

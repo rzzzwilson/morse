@@ -7,15 +7,20 @@ A PyQt5 application to help a user learn to send and receive Morse code.
 You need a morse key and Code Practice Oscillator (CPO).
 """
 
-import sys
 import platform
 import queue
 
-from PyQt5.QtCore import pyqtSignal, QObject, QThread
-from PyQt5.QtWidgets import QApplication, QHBoxLayout, QVBoxLayout, QWidget
-from PyQt5.QtWidgets import QPushButton, QMessageBox
+from PyQt5.QtCore import Qt, pyqtSignal, QObject, QThread
+from PyQt5.QtWidgets import QApplication, QHBoxLayout, QVBoxLayout, QWidget, QTabWidget
+from PyQt5.QtWidgets import QFormLayout, QLineEdit, QRadioButton, QLabel, QCheckBox
+from PyQt5.QtWidgets import QPushButton, QMessageBox, QSpacerItem
+
 import receive_morse
-import display
+from display import Display
+from speed import SpeedGroup
+from grouping import Grouping
+from charset import Charset
+
 import logger
 log = logger.Log('debug.log', logger.Log.DEBUG)
 
@@ -92,116 +97,89 @@ class MorseReader(QThread):
             if len(char) == 1:
                 self.sig_obj.morse_char.emit(char)
 
-
-class MorseTrainer(QWidget):
-    """Application to demonstrate the Morse Trainer 'display' widget."""
-
-    def __init__(self, params_file):
-        super().__init__()
-        self.params_file = params_file
+class MorseTrainer(QTabWidget):
+    def __init__(self, parent = None):
+        super(MorseTrainer, self).__init__(parent)
         self.initUI()
 
-        # create signal/slot for recognized morse characters
-        self.got_morse_char = Communicate()
-        self.got_morse_char.morse_char.connect(self.gotMorseChar)
-
-        self.read_thread = MorseReader(self.got_morse_char, params_file)
-        self.read_thread.start()
-
-        # populate the display widget a bit
-        self.display.insert_upper('U', fg=display.Display.AskTextColour)
-        self.setWindowTitle("Morse Trainer %s" % ProgramVersion)
-
     def initUI(self):
-        self.display = display.Display()
+        self.send_tab = QWidget()
+        self.receive_tab = QWidget()
+        self.stats_tab = QWidget()
+
+        self.addTab(self.send_tab, 'Send')
+        self.addTab(self.receive_tab, 'Receive')
+        self.addTab(self.stats_tab, 'Status')
+        self.initSendTab()
+        self.initReceiveTab()
+        self.InitStatsTab()
+        self.setWindowTitle('Morse Trainer %s' % ProgramVersion)
+
+    def initSendTab(self):
+        # define widgets on this tab
+        self.send_display = Display()
+        self.btn_send_start_stop = QPushButton('Start')
+        self.btn_send_clear = QPushButton('Clear')
+
+        # start layout
+        buttons = QVBoxLayout()
+        buttons.addStretch()
+        buttons.addWidget(self.btn_send_start_stop)
+        buttons.addItem(QSpacerItem(20, 20))
+        buttons.addWidget(self.btn_send_clear)
 
         hbox = QHBoxLayout()
-        hbox.addWidget(self.display)
+        hbox.addStretch()
+        hbox.addLayout(buttons)
 
-        self.setLayout(hbox)
+        layout = QVBoxLayout()
+        layout.addWidget(self.send_display)
+        layout.addLayout(hbox)
+        self.send_tab.setLayout(layout)
 
-        self.setGeometry(100, 100, 800, 200)
-        self.setWindowTitle('Example of Display widget')
-        self.show()
+    def initReceiveTab(self):
+        # define widgets on this tab
+        self.receive_display = Display()
+        self.receive_speeds = SpeedGroup()
+        self.receive_grouping = Grouping()
+        self.receive_charset = Charset()
+        self.btn_receive_start_stop = QPushButton('Start')
+        self.btn_receive_clear = QPushButton('Clear')
 
-    def gotMorseChar(self, char):
-        """The morse reader thread found a character."""
+        # start layout
+        buttons = QVBoxLayout()
+        buttons.addStretch()
+        buttons.addWidget(self.btn_receive_start_stop)
+        buttons.addItem(QSpacerItem(20, 20))
+        buttons.addWidget(self.btn_receive_clear)
 
-        self.display.insert_upper('U')
-        self.display.insert_lower(char, fg=display.Display.AnsTextBadColour)
-        self.display.set_highlight()
-        self.display.update()
+        controls = QVBoxLayout()
+        controls.addWidget(self.receive_speeds)
+        controls.addWidget(self.receive_grouping)
+        controls.addWidget(self.receive_charset)
 
-    def closeEvent(self, event):
-        log('Closing read_thread')
-        self.read_thread.close()
+        hbox = QHBoxLayout()
+        hbox.addLayout(controls)
+        hbox.addLayout(buttons)
 
+        layout = QVBoxLayout()
+        layout.addWidget(self.receive_display)
+        layout.addLayout(hbox)
+        self.receive_tab.setLayout(layout)
 
-# get program name from sys.argv
-prog_name = sys.argv[0]
-if prog_name.endswith('.py'):
-    prog_name = prog_name[:-3]
+    def InitStatsTab(self):
+        layout = QHBoxLayout()
+        layout.addWidget(QLabel('subjects'))
+        layout.addWidget(QCheckBox('Physics'))
+        layout.addWidget(QCheckBox('Maths'))
+        self.setTabText(2, 'Status')
+        self.stats_tab.setLayout(layout)
 
-# path to file holding morse recognition parameters
-params_file = '%s.param' % prog_name
-
-app = QApplication(sys.argv)
-ex = MorseTrainer(params_file)
-sys.exit(app.exec())
-
-
-########
-import sys
-
-from PyQt5.QtWidgets import QApplication, QWidget, QTabWidget
-from PyQt5.QtWidgets import QFormLayout, QHBoxLayout, QLineEdit
-from PyQt5.QtWidgets import QRadioButton, QLabel, QLineEdit, QCheckBox
-
-
-class MorseTrainer(QTabWidget):
-   def __init__(self, parent = None):
-       #super(MorseTrainer, self).__init__(parent)
-      super().__init__(parent)
-      self.tab1 = QWidget()
-      self.tab2 = QWidget()
-      self.tab3 = QWidget()
-
-      self.addTab(self.tab1,"Send")
-      self.addTab(self.tab2,"Receive")
-      self.addTab(self.tab3,"Status")
-      self.initSendTab()
-      self.initReceiveTab()
-      self.initStatusTab()
-      self.setWindowTitle("Morse Trainer %s" % ProgramVersion)
-
-   def initSendTab(self):
-      layout = QVBoxLayout()
-      self.send_display = Display()
-      self.tab1.setLayout(layout)
-
-   def initReceiveTab(self):
-      layout = QFormLayout()
-      sex = QHBoxLayout()
-      sex.addWidget(QRadioButton("Male"))
-      sex.addWidget(QRadioButton("Female"))
-      layout.addRow(QLabel("Sex"),sex)
-      layout.addRow("Date of Birth",QLineEdit())
-      self.setTabText(1,"Personal Details")
-      self.tab2.setLayout(layout)
-
-   def initStatusTab(self):
-      layout = QHBoxLayout()
-      layout.addWidget(QLabel("subjects"))
-      layout.addWidget(QCheckBox("Physics"))
-      layout.addWidget(QCheckBox("Maths"))
-      self.setTabText(2,"Education Details")
-      self.tab3.setLayout(layout)
-
-def main():
-   app = QApplication(sys.argv)
-   ex = MorseTrainer()
-   ex.show()
-   sys.exit(app.exec_())
 
 if __name__ == '__main__':
-   main()
+    import sys
+
+    app = QApplication(sys.argv)
+    ex = MorseTrainer()
+    ex.show()
+    sys.exit(app.exec())

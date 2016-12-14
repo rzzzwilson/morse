@@ -2,15 +2,22 @@
 # -*- coding: utf-8 -*-
 
 """
-The 'receive group' widget.
+The 'grouping' widget for Morse Trainer.
+
+grouping = Grouping()
+
+group = grouping.get_grouping()
+Return None or a value in [2..8] inclusive.
+
+Raises the '.changed' signal when changed.
 """
 
-from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import (QApplication, QWidget, QComboBox, QLabel,
+                             QHBoxLayout, QVBoxLayout, QGroupBox)
 
-class ReceiveGroup(QWidget):
+class Grouping(QWidget):
     def __init__(self):
         QWidget.__init__(self)
-        self.setWindowTitle('ReceiveGroup Test')
         self.initUI()
 
     def initUI(self):
@@ -25,21 +32,17 @@ class ReceiveGroup(QWidget):
         combo.addItem('8 characters')
         label = QLabel('Groups:')
 
+        layout = QVBoxLayout()
+
+        groupbox = QGroupBox("Grouping")
+        layout.addWidget(groupbox)
+
         hbox = QHBoxLayout()
+
         hbox.addWidget(label)
         hbox.addWidget(combo)
         hbox.addStretch(1)
 
-        vbox = QVBoxLayout()
-        vbox.addLayout(hbox)
+        groupbox.setLayout(hbox)
 
-        self.setLayout(vbox)
-
-
-if __name__ == '__main__':
-    import sys
-
-    app = QApplication(sys.argv)
-    screen = ReceiveGroup()
-    screen.show()
-    sys.exit(app.exec())
+        self.setLayout(layout)
