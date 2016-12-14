@@ -32,6 +32,11 @@ else:
     raise Exception('Unrecognized platform: %s' % platform.system())
 
 
+ProgramMajor = 0
+ProgramMinor = 1
+ProgramVersion = '%d.%d' % (ProgramMajor, ProgramMinor)
+
+
 class Communicate(QObject):
     """Signal/slot communication class."""
 
@@ -62,15 +67,15 @@ class MorseReader(QThread):
             log('Loading params from %s' % self.params_file)
             self.receive_morse.load_params(self.params_file)
 
-#    def __del__(self):
-#        log('__del__')
-#        # save updated params
-#        if self.params_file:
-#            log('Saving params to %s' % self.params_file)
-#            self.receive_morse.save_params(self.params_file)
-#        # close morse reader
-#        self.running = False
-#        self.wait()
+    def __del__(self):
+        log('__del__')
+        # save updated params
+        if self.params_file:
+            log('Saving params to %s' % self.params_file)
+            self.receive_morse.save_params(self.params_file)
+        # close morse reader
+        self.running = False
+        self.wait()
 
     def close(self):
         if self.params_file:
@@ -78,8 +83,6 @@ class MorseReader(QThread):
             self.receive_morse.save_params(self.params_file)
         log('Stopping thread')
         self.running = False
-        self.wait(500)
-        log('After .wait(500)')
 
     def run(self):
         self.running = True
@@ -107,6 +110,7 @@ class MorseTrainer(QWidget):
 
         # populate the display widget a bit
         self.display.insert_upper('U', fg=display.Display.AskTextColour)
+        self.setWindowTitle("Morse Trainer %s" % ProgramVersion)
 
     def initUI(self):
         self.display = display.Display()
@@ -144,3 +148,60 @@ params_file = '%s.param' % prog_name
 app = QApplication(sys.argv)
 ex = MorseTrainer(params_file)
 sys.exit(app.exec())
+
+
+########
+import sys
+
+from PyQt5.QtWidgets import QApplication, QWidget, QTabWidget
+from PyQt5.QtWidgets import QFormLayout, QHBoxLayout, QLineEdit
+from PyQt5.QtWidgets import QRadioButton, QLabel, QLineEdit, QCheckBox
+
+
+class MorseTrainer(QTabWidget):
+   def __init__(self, parent = None):
+       #super(MorseTrainer, self).__init__(parent)
+      super().__init__(parent)
+      self.tab1 = QWidget()
+      self.tab2 = QWidget()
+      self.tab3 = QWidget()
+
+      self.addTab(self.tab1,"Send")
+      self.addTab(self.tab2,"Receive")
+      self.addTab(self.tab3,"Status")
+      self.initSendTab()
+      self.initReceiveTab()
+      self.initStatusTab()
+      self.setWindowTitle("Morse Trainer %s" % ProgramVersion)
+
+   def initSendTab(self):
+      layout = QVBoxLayout()
+      self.send_display = Display()
+      self.tab1.setLayout(layout)
+
+   def initReceiveTab(self):
+      layout = QFormLayout()
+      sex = QHBoxLayout()
+      sex.addWidget(QRadioButton("Male"))
+      sex.addWidget(QRadioButton("Female"))
+      layout.addRow(QLabel("Sex"),sex)
+      layout.addRow("Date of Birth",QLineEdit())
+      self.setTabText(1,"Personal Details")
+      self.tab2.setLayout(layout)
+
+   def initStatusTab(self):
+      layout = QHBoxLayout()
+      layout.addWidget(QLabel("subjects"))
+      layout.addWidget(QCheckBox("Physics"))
+      layout.addWidget(QCheckBox("Maths"))
+      self.setTabText(2,"Education Details")
+      self.tab3.setLayout(layout)
+
+def main():
+   app = QApplication(sys.argv)
+   ex = MorseTrainer()
+   ex.show()
+   sys.exit(app.exec_())
+
+if __name__ == '__main__':
+   main()
