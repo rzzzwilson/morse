@@ -9,6 +9,7 @@ import sys
 from PyQt5.QtWidgets import (QApplication, QWidget, QHBoxLayout,
                              QVBoxLayout, QPushButton)
 from grid_select import GridSelect
+import utils
 
 
 class GridSelectExample(QWidget):
@@ -20,9 +21,9 @@ class GridSelectExample(QWidget):
 
 
     def initUI(self):
-        self.display_alphabet = GridSelect('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
-        self.display_numbers = GridSelect('0123456789')
-        self.display_punctuation = GridSelect("""?/,.():;!'"=""")
+        self.display_alphabet = GridSelect(utils.Alphabetics)
+        self.display_numbers = GridSelect(utils.Numbers)
+        self.display_punctuation = GridSelect(utils.Punctuation)
         invert_button = QPushButton('Invert Selections', self)
 
         hbox1 = QHBoxLayout()

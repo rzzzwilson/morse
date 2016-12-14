@@ -10,6 +10,7 @@ from random import randint
 from PyQt5.QtWidgets import (QApplication, QWidget, QPushButton,
                              QHBoxLayout, QVBoxLayout)
 from show_status import ShowStatus
+import utils
 
 
 class ShowStatusExample(QWidget):
@@ -21,9 +22,9 @@ class ShowStatusExample(QWidget):
 
 
     def initUI(self):
-        self.alphabet_status = ShowStatus('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
-        self.numbers_status = ShowStatus('0123456789')
-        self.punctuation_status = ShowStatus("""?/,.():;!'"=""")
+        self.alphabet_status = ShowStatus(utils.Alphabetics)
+        self.numbers_status = ShowStatus(utils.Numbers)
+        self.punctuation_status = ShowStatus(utils.Punctuation)
         redisplay_button = QPushButton('Redisplay', self)
 
         hbox1 = QHBoxLayout()
