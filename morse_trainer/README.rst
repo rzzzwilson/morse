@@ -21,10 +21,13 @@ Requirements
 * Teach sending and receiving morse
     * SEND listens to morse sounds and displays the decoded morse
     * RECEIVE sounds morse and listener types in the received characters
-* Have a "practice communication" mode, computer is other end?
 * Uses both Koch and selectable characters approaches
 * User can vary char and word speeds independently
 * Program keeps learning statistics for feedback
+
+Nice to have:
+
+* Have a "practice communication" mode, computer is other end?
 * Multiple users, each with own history/statistics (so, login)
 
 Implementation
