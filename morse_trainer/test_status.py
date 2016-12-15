@@ -9,11 +9,11 @@ import sys
 from random import randint
 from PyQt5.QtWidgets import (QApplication, QWidget, QPushButton,
                              QHBoxLayout, QVBoxLayout)
-from show_status import ShowStatus
+from status import Status
 import utils
 
 
-class ShowStatusExample(QWidget):
+class StatusExample(QWidget):
     """Application to demonstrate the Morse Trainer 'display' widget."""
 
     def __init__(self):
@@ -22,9 +22,9 @@ class ShowStatusExample(QWidget):
 
 
     def initUI(self):
-        self.alphabet_status = ShowStatus(utils.Alphabetics)
-        self.numbers_status = ShowStatus(utils.Numbers)
-        self.punctuation_status = ShowStatus(utils.Punctuation)
+        self.alphabet_status = Status(utils.Alphabetics)
+        self.numbers_status = Status(utils.Numbers)
+        self.punctuation_status = Status(utils.Punctuation)
         redisplay_button = QPushButton('Redisplay', self)
 
         hbox1 = QHBoxLayout()
@@ -43,7 +43,7 @@ class ShowStatusExample(QWidget):
         redisplay_button.clicked.connect(self.redisplayButtonClicked)
 
         self.setGeometry(100, 100, 800, 200)
-        self.setWindowTitle('Example of ShowStatus widget')
+        self.setWindowTitle('Example of Status widget')
         self.show()
 
     def redisplayButtonClicked(self):
@@ -62,5 +62,5 @@ class ShowStatusExample(QWidget):
 
 
 app = QApplication(sys.argv)
-ex = ShowStatusExample()
+ex = StatusExample()
 sys.exit(app.exec())

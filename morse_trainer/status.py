@@ -4,9 +4,9 @@
 """
 A PyQt5 custom widget used by Morse Trainer.
 
-ShowStatus shows the error rate for a GridDisplay data set.
+Status shows the error rate for a GridDisplay data set.
 
-show_status = ShowStatus(data)
+show_status = Status(data)
 
 where 'data' is the string used to establish a GridDisplay.
 
@@ -24,7 +24,7 @@ from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QPainter, QFont
 
 
-class ShowStatus(QWidget):
+class Status(QWidget):
     """Widget to display a set of bars displaying success percentages."""
 
     # set platform-dependent sizes
@@ -96,11 +96,11 @@ class ShowStatus(QWidget):
         num_chars = len(self.data)
 
         # figure out the widget size
-        widget_width = (ShowStatus.LeftMargin + num_chars*ShowStatus.BarWidth
-                        + (num_chars-1)*ShowStatus.InterBarMargin
-                        + ShowStatus.RightMargin)
-        widget_height = (ShowStatus.TopMargin + ShowStatus.BarHeight
-                         + ShowStatus.BottomMargin)
+        widget_width = (Status.LeftMargin + num_chars*Status.BarWidth
+                        + (num_chars-1)*Status.InterBarMargin
+                        + Status.RightMargin)
+        widget_height = (Status.TopMargin + Status.BarHeight
+                         + Status.BottomMargin)
 
         self.setFixedWidth(widget_width)
         self.setFixedHeight(widget_height)
@@ -110,8 +110,8 @@ class ShowStatus(QWidget):
         self.widget_height = widget_height
 
         # set the widget internal state
-        self.font = QFont(ShowStatus.Font, ShowStatus.FontSize)
-        self.font_size = ShowStatus.FontSize
+        self.font = QFont(Status.Font, Status.FontSize)
+        self.font_size = Status.FontSize
 
         # draw the bars, with surround border
 
@@ -137,32 +137,32 @@ class ShowStatus(QWidget):
 
         # draw outline of each bar
         qp.setPen(Qt.gray)
-        x = ShowStatus.LeftMargin
-        y = ShowStatus.TopMargin
+        x = Status.LeftMargin
+        y = Status.TopMargin
         for _ in self.data:
-            qp.drawRect(x, y, ShowStatus.BarWidth, ShowStatus.BarHeight)
-            x += ShowStatus.BarWidth + ShowStatus.InterBarMargin
+            qp.drawRect(x, y, Status.BarWidth, Status.BarHeight)
+            x += Status.BarWidth + Status.InterBarMargin
 
         # draw the percentage bar
         if self.percent:
-            x = ShowStatus.LeftMargin
-            y = ShowStatus.TopMargin
+            x = Status.LeftMargin
+            y = Status.TopMargin
             qp.setBrush(Qt.blue)
             for (char, percent) in zip(self.data, self.percent):
-                pct_height = int(ShowStatus.BarHeight * percent)
+                pct_height = int(Status.BarHeight * percent)
                 if pct_height == 0:     # force *some* display if 0
                     pct_height = 1
-                top_height = ShowStatus.BarHeight - pct_height
-                qp.drawRect(x, y+top_height, ShowStatus.BarWidth, pct_height)
-                x += ShowStatus.BarWidth + ShowStatus.InterBarMargin
+                top_height = Status.BarHeight - pct_height
+                qp.drawRect(x, y+top_height, Status.BarWidth, pct_height)
+                x += Status.BarWidth + Status.InterBarMargin
 
         # draw column 'footer' header
-        x = ShowStatus.LabelLeftMargin
-        y = self.widget_height - ShowStatus.LabelBottomMargin
+        x = Status.LabelLeftMargin
+        y = self.widget_height - Status.LabelBottomMargin
         qp.setPen(Qt.black)
         for char in self.data:
             qp.drawText(x, y, char)
-            x += ShowStatus.BarWidth + ShowStatus.InterBarMargin
+            x += Status.BarWidth + Status.InterBarMargin
 
     def refresh(self, data):
         """Update self.percent with values matching 'data'."""
