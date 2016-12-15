@@ -19,6 +19,8 @@ class Groups(QWidget):
     def __init__(self):
         QWidget.__init__(self)
         self.initUI()
+        self.setFixedHeight(80)
+        self.show()
 
     def initUI(self):
         # define the widgets in this group
@@ -38,10 +40,9 @@ class Groups(QWidget):
         layout.addWidget(groupbox)
 
         hbox = QHBoxLayout()
-
         hbox.addWidget(label)
         hbox.addWidget(combo)
-        hbox.addStretch(1)
+        hbox.addStretch()
 
         groupbox.setLayout(hbox)
 

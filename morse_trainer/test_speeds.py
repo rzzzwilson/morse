@@ -25,6 +25,8 @@ class SpeedsExample(QWidget):
         self.setLayout(hbox)
 
         self.setWindowTitle('Example of Speeds widget')
+        #self.resize(100, 80)
+        self.setFixedSize(400, 125)
         self.show()
 
         # connect the widget to '.changed' event handler

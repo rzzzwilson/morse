@@ -22,7 +22,7 @@ Raises a '.changed' signal on any state change.
 import platform
 
 from PyQt5.QtWidgets import QWidget, QGridLayout, QButtonGroup, QVBoxLayout
-from PyQt5.QtWidgets import QGroupBox
+from PyQt5.QtWidgets import QGroupBox, QSpacerItem
 from PyQt5.QtWidgets import QPushButton, QRadioButton, QSpinBox, QLabel
 from PyQt5.QtCore import Qt, pyqtSignal
 
@@ -88,6 +88,9 @@ class Charset(QWidget):
         # arrange for widget to start signalling now
         self.make_signal = True
 
+        self.setFixedHeight(250)
+        self.show()
+
     def initUI(self):
         """Set up the UI."""
 
@@ -106,7 +109,7 @@ class Charset(QWidget):
         self.gs_Punct = GridSelect(utils.Punctuation)
 
         layout = QVBoxLayout()
-        groupbox = QGroupBox("Test Charset")
+        groupbox = QGroupBox("Test character set")
         layout.addWidget(groupbox)
 
         # tie the radio buttons into a group
@@ -146,9 +149,14 @@ class Charset(QWidget):
         grid.addWidget(self.gs_Punct, row, 2, 2, 3,
                        alignment=Qt.AlignLeft|Qt.AlignVCenter)
 
+        # add empty column that stretches
+        grid.addItem(QSpacerItem(1,1), row, 4)
+        grid.setColumnStretch(4, 1)
+
         groupbox.setLayout(grid)
-#        layout.addLayout(grid)
         self.setLayout(layout)
+
+        self.setMinimumSize(440, 250)
 
         self.setWindowTitle('Test of Charset widget')
         self.show()

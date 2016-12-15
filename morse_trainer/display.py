@@ -123,8 +123,8 @@ class Display(QWidget):
 
         # set the widget internal state
         self.setFixedHeight(Display.DefaultWidgetHeight)
-        self.setMinimumSize(Display.DefaultWidgetWidth,
-                            Display.DefaultWidgetHeight)
+#        self.setMinimumSize(Display.DefaultWidgetWidth,
+#                            Display.DefaultWidgetHeight)
         self.fixed_font = QFont('Courier', Display.FontSize)
         self.font_size = Display.FontSize
         self.font = self.fixed_font

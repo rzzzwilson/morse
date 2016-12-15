@@ -31,7 +31,7 @@ class TestCharset(QWidget):
 
         self.display.changed.connect(self.changeCharsetHandler)
 
-        self.setGeometry(100, 100, 400, 100)
+        self.setGeometry(100, 100, 500, 100)
         self.setWindowTitle('Example of Charset widget')
         self.show()
 

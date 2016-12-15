@@ -17,7 +17,7 @@ from PyQt5.QtWidgets import QPushButton, QMessageBox, QSpacerItem
 
 import receive_morse
 from display import Display
-from speed import Speed
+from speeds import Speeds
 from groups import Groups
 from charset import Charset
 
@@ -113,6 +113,7 @@ class MorseTrainer(QTabWidget):
         self.initSendTab()
         self.initReceiveTab()
         self.InitStatsTab()
+        self.setGeometry(100, 100, 645, 545)
         self.setWindowTitle('Morse Trainer %s' % ProgramVersion)
 
     def initSendTab(self):
@@ -140,8 +141,8 @@ class MorseTrainer(QTabWidget):
     def initReceiveTab(self):
         # define widgets on this tab
         self.receive_display = Display()
-        self.receive_speed = Speed()
-        self.receive_grouping = Groups()
+        self.receive_speeds = Speeds()
+        self.receive_groups = Groups()
         self.receive_charset = Charset()
         self.btn_receive_start_stop = QPushButton('Start')
         self.btn_receive_clear = QPushButton('Clear')
@@ -154,13 +155,13 @@ class MorseTrainer(QTabWidget):
         buttons.addWidget(self.btn_receive_clear)
 
         controls = QVBoxLayout()
-        controls.addWidget(self.receive_speed)
-        controls.addWidget(self.receive_grouping)
+        controls.addWidget(self.receive_speeds)
+        controls.addWidget(self.receive_groups)
         controls.addWidget(self.receive_charset)
-        controls.addStretch()
 
         hbox = QHBoxLayout()
         hbox.addLayout(controls)
+        buttons.addItem(QSpacerItem(10, 1))
         hbox.addLayout(buttons)
 
         layout = QVBoxLayout()

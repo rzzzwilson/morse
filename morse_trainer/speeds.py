@@ -35,6 +35,7 @@ class Speeds(QWidget):
         QWidget.__init__(self)
         self.initUI(word_speed, char_speed)
         self.setWindowTitle('Test Speeds widget')
+        self.setFixedHeight(80)
         self.show()
 
     def initUI(self, word_speed, char_speed):
@@ -58,13 +59,12 @@ class Speeds(QWidget):
         self.spb_chars.valueChanged.connect(self.handle_charspeed_change)
 
         # start the layout
-        vbox = QVBoxLayout()
+        layout = QVBoxLayout()
 
         groupbox = QGroupBox("Speeds")
-        vbox.addWidget(groupbox)
+        layout.addWidget(groupbox)
 
         hbox = QHBoxLayout()
-
         hbox.addWidget(lbl_chars)
         hbox.addWidget(self.spb_chars)
         hbox.addWidget(lbl_words)
@@ -72,10 +72,8 @@ class Speeds(QWidget):
         hbox.addStretch()
 
         groupbox.setLayout(hbox)
-        vbox.addWidget(groupbox)
-#        vbox.addStretch()
 
-        self.setLayout(vbox)
+        self.setLayout(layout)
 
     def handle_wordspeed_change(self, value):
         """Word speed changed.
@@ -91,7 +89,15 @@ class Speeds(QWidget):
         self.changed.emit()
 
     def handle_charspeed_change(self, value):
-        """Character speed changed.  Send a signal."""
+        """Character speed changed.
+
+        Ensure the character speed is not less and send a signal.
+        """
+
+        word_speed = self.spb_words.value()
+
+        if value < word_speed:
+            self.spb_words.setValue(value)
 
         self.changed.emit()
 
