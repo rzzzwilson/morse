@@ -2,14 +2,14 @@
 # -*- coding: utf-8 -*-
 
 """
-Test the 'speed' widget.
+Test the 'speeds' widget.
 """
 
 import sys
-from speed import SpeedGroup
+from speeds import Speeds
 from PyQt5.QtWidgets import QApplication, QWidget, QHBoxLayout
 
-class SpeedGroupExample(QWidget):
+class SpeedsExample(QWidget):
     """Application to demonstrate the Morse Trainer 'display' widget."""
 
     def __init__(self):
@@ -18,13 +18,13 @@ class SpeedGroupExample(QWidget):
 
 
     def initUI(self):
-        self.speed_group = SpeedGroup()
+        self.speed_group = Speeds()
 
         hbox = QHBoxLayout()
         hbox.addWidget(self.speed_group)
         self.setLayout(hbox)
 
-        self.setWindowTitle('Example of SpeedGroup widget')
+        self.setWindowTitle('Example of Speeds widget')
         self.show()
 
         # connect the widget to '.changed' event handler
@@ -35,5 +35,5 @@ class SpeedGroupExample(QWidget):
 
 
 app = QApplication(sys.argv)
-ex = SpeedGroupExample()
+ex = SpeedsExample()
 sys.exit(app.exec())

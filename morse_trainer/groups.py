@@ -4,7 +4,7 @@
 """
 The 'grouping' widget for Morse Trainer.
 
-grouping = Grouping()
+grouping = Groups()
 
 group = grouping.get_grouping()
 Return None or a value in [2..8] inclusive.
@@ -15,7 +15,7 @@ Raises the '.changed' signal when changed.
 from PyQt5.QtWidgets import (QApplication, QWidget, QComboBox, QLabel,
                              QHBoxLayout, QVBoxLayout, QGroupBox)
 
-class Grouping(QWidget):
+class Groups(QWidget):
     def __init__(self):
         QWidget.__init__(self)
         self.initUI()
@@ -34,7 +34,7 @@ class Grouping(QWidget):
 
         layout = QVBoxLayout()
 
-        groupbox = QGroupBox("Grouping")
+        groupbox = QGroupBox("Groups")
         layout.addWidget(groupbox)
 
         hbox = QHBoxLayout()

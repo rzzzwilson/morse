@@ -6,12 +6,12 @@ Test code for 'grouping' widget used by Morse Trainer.
 """
 
 import sys
-from grouping import Grouping
+from groups import Groups
 from PyQt5.QtWidgets import (QApplication, QWidget, QHBoxLayout,
                              QVBoxLayout, QPushButton)
 
 
-class TestGrouping(QWidget):
+class TestGroups(QWidget):
     """Application to demonstrate the Morse Trainer 'grouping' widget."""
 
     def __init__(self):
@@ -20,7 +20,7 @@ class TestGrouping(QWidget):
 
 
     def initUI(self):
-        self.grouping = Grouping()
+        self.grouping = Groups()
 
         vbox = QVBoxLayout()
         vbox.addWidget(self.grouping)
@@ -28,10 +28,10 @@ class TestGrouping(QWidget):
         self.setLayout(vbox)
 
         self.setGeometry(100, 100, 800, 200)
-        self.setWindowTitle('Example of Grouping widget')
+        self.setWindowTitle('Example of Groups widget')
         self.show()
 
 
 app = QApplication(sys.argv)
-ex = TestGrouping()
+ex = TestGroups()
 sys.exit(app.exec())

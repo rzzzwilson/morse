@@ -92,13 +92,13 @@ class Charset(QWidget):
         """Set up the UI."""
 
         # create all the sub-widgets
-        self.rb_Koch = QRadioButton("Use the Koch characters")
+        self.rb_Koch = QRadioButton("Use the Koch character set")
         koch_using = QLabel('Using')
         self.sb_KochNumber = QSpinBox(self)
         self.sb_KochNumber.setMinimum(Charset.KochMin)
         self.sb_KochNumber.setMaximum(Charset.KochMax)
         self.rb_User = QRadioButton("Select the characters to use")
-        self.btn_Alphas = QPushButton('Alphabetics', self)
+        self.btn_Alphas = QPushButton('Alphabet', self)
         self.gs_Alphas = GridSelect(utils.Alphabetics)
         self.btn_Numbers = QPushButton('Numbers', self)
         self.gs_Numbers = GridSelect(utils.Numbers)

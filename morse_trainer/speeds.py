@@ -6,7 +6,7 @@ A PyQt5 custom widget used by Morse Trainer.
 
 Used to select character and word speeds.
 
-speed = SpeedGroup()
+speed = Speeds()
 
 speeds = speed.getSpeeds()
 
@@ -22,7 +22,7 @@ from PyQt5.QtWidgets import QLabel, QSpinBox, QGroupBox
 from PyQt5.QtCore import pyqtSignal
 
 
-class SpeedGroup(QWidget):
+class Speeds(QWidget):
 
     # signal raised when any value changes
     changed = pyqtSignal()
@@ -34,22 +34,22 @@ class SpeedGroup(QWidget):
     def __init__(self, word_speed=MinSpeed, char_speed=MinSpeed):
         QWidget.__init__(self)
         self.initUI(word_speed, char_speed)
-        self.setWindowTitle('Test Speed Group widget')
+        self.setWindowTitle('Test Speeds widget')
         self.show()
 
     def initUI(self, word_speed, char_speed):
         # define the widgets we are going to use
-        lbl_words = QLabel('Words')
+        lbl_words = QLabel('  Overall')
         self.spb_words = QSpinBox(self)
-        self.spb_words.setMinimum(SpeedGroup.MinSpeed)
-        self.spb_words.setMaximum(SpeedGroup.MaxSpeed)
+        self.spb_words.setMinimum(Speeds.MinSpeed)
+        self.spb_words.setMaximum(Speeds.MaxSpeed)
         self.spb_words.setValue(word_speed)
         self.spb_words.setSuffix(' wpm')
 
         lbl_chars = QLabel('Characters')
         self.spb_chars = QSpinBox(self)
-        self.spb_chars.setMinimum(SpeedGroup.MinSpeed)
-        self.spb_chars.setMaximum(SpeedGroup.MaxSpeed)
+        self.spb_chars.setMinimum(Speeds.MinSpeed)
+        self.spb_chars.setMaximum(Speeds.MaxSpeed)
         self.spb_chars.setValue(char_speed)
         self.spb_chars.setSuffix(' wpm')
 
@@ -65,15 +65,15 @@ class SpeedGroup(QWidget):
 
         hbox = QHBoxLayout()
 
-        hbox.addWidget(lbl_words)
-        hbox.addWidget(self.spb_words)
         hbox.addWidget(lbl_chars)
         hbox.addWidget(self.spb_chars)
+        hbox.addWidget(lbl_words)
+        hbox.addWidget(self.spb_words)
         hbox.addStretch()
 
         groupbox.setLayout(hbox)
         vbox.addWidget(groupbox)
-        vbox.addStretch()
+#        vbox.addStretch()
 
         self.setLayout(vbox)
 
