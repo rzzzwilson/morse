@@ -124,9 +124,9 @@ class Charset(QWidget):
         grid.setVerticalSpacing(5)
 
         row = 0
-        grid.addWidget(self.rb_Koch, row, 0, 1, 3, alignment=Qt.AlignLeft)
-        grid.addWidget(koch_using, row, 3, alignment=Qt.AlignRight)
-        grid.addWidget(self.sb_KochNumber, row, 4, alignment=Qt.AlignLeft)
+        grid.addWidget(self.rb_Koch, row, 0, 1, 3, alignment=Qt.AlignLeft|Qt.AlignVCenter)
+        grid.addWidget(koch_using, row, 3, alignment=Qt.AlignRight|Qt.AlignVCenter)
+        grid.addWidget(self.sb_KochNumber, row, 4, alignment=Qt.AlignLeft|Qt.AlignVCenter)
 
         row += 1
         grid.addWidget(self.rb_User, row, 0, 1, 3, alignment=Qt.AlignLeft)

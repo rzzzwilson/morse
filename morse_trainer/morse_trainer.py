@@ -20,6 +20,8 @@ from display import Display
 from speeds import Speeds
 from groups import Groups
 from charset import Charset
+from charset_status import CharsetStatus
+import utils
 
 import logger
 log = logger.Log('debug.log', logger.Log.DEBUG)
@@ -113,7 +115,7 @@ class MorseTrainer(QTabWidget):
         self.initSendTab()
         self.initReceiveTab()
         self.InitStatsTab()
-        self.setGeometry(100, 100, 645, 545)
+        self.setGeometry(100, 100, 815, 545)
         self.setWindowTitle('Morse Trainer %s' % ProgramVersion)
 
     def initSendTab(self):
@@ -170,11 +172,18 @@ class MorseTrainer(QTabWidget):
         self.receive_tab.setLayout(layout)
 
     def InitStatsTab(self):
-        layout = QHBoxLayout()
-        layout.addWidget(QLabel('subjects'))
-        layout.addWidget(QCheckBox('Physics'))
-        layout.addWidget(QCheckBox('Maths'))
-        self.setTabText(2, 'Status')
+        layout = QVBoxLayout()
+
+        self.send_status = CharsetStatus('Send Proficiency', utils.Alphabetics,
+                                         utils.Numbers, utils.Punctuation)
+        self.receive_status = CharsetStatus('Receive Proficiency',
+                                            utils.Alphabetics, utils.Numbers,
+                                            utils.Punctuation)
+
+        layout.addWidget(self.send_status)
+        layout.addWidget(self.receive_status)
+
+#        self.setTabText(2, 'Status')
         self.stats_tab.setLayout(layout)
 
 
