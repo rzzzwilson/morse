@@ -132,8 +132,9 @@ class MorseTrainer(QTabWidget):
         doc_text = ('Here we test your receiving accuracy.  The program '
                     'will sound a random morse character which you should type '
                     'on the keyboard.  The character you typed will appear in '
-                    'the bottom row of the display above, along with the '
-                    'character the program actually sent in the top row.')
+                    'the bottom row of the display at the top of this tab, '
+                    'along with the character the program actually sent in '
+                    'the top row.')
         instructions = Instructions(doc_text)
         self.receive_speeds = Speeds()
         self.receive_groups = Groups()
@@ -166,17 +167,20 @@ class MorseTrainer(QTabWidget):
 
     def InitStatsTab(self):
         doc_text = ('This shows your sending and receiving accuracy. '
-                    'Each bar shows your profiency for a character.  The '
+                    'Each bar shows your accuracy for a character.  The '
                     'taller the bar the better.  You need to practice the '
-                    'characters with shorter bars. The red line shows the Koch '
-                    'threshold.\n\n'
+                    'characters with shorter bars.\n\n'
+                    'The red line shows the Koch threshold.  In Koch mode '
+                    'if all characters in the test set are over the threshold '
+                    'the algorithm will add another character to the set you '
+                    'are tested with.\n\n'
                     'Pressing the "Clear" button will clear the statistics.')
         instructions = Instructions(doc_text)
-        self.send_status = CharsetStatus('Send Proficiency', utils.Alphabetics,
+        self.send_status = CharsetStatus('Send Accuracy', utils.Alphabetics,
                                          utils.Numbers, utils.Punctuation)
         percents = self.stats2percent(self.send_stats)
         self.send_status.refresh(percents)
-        self.receive_status = CharsetStatus('Receive Proficiency',
+        self.receive_status = CharsetStatus('Receive Accuracy',
                                             utils.Alphabetics, utils.Numbers,
                                             utils.Punctuation)
         percents = self.stats2percent(self.receive_stats)
@@ -202,19 +206,29 @@ class MorseTrainer(QTabWidget):
     def xyzzy(self):
         """Make fake data and update the stats."""
 
-        from random import randint
+        pass
 
-        self.send_stats = {}
-        for char in self.send_status.data:
-            self.send_stats[char] = (100, randint(50,100))
-        percents = self.stats2percent(self.send_stats)
-        self.send_status.refresh(percents)
+#        self.update_stats(self.send_stats, 'A', True)
+#        percents = self.stats2percent(self.send_stats)
+#        self.send_status.refresh(percents)
+#
+#        self.update_stats(self.receive_stats, 'B', False)
+#        percents = self.stats2percent(self.receive_stats)
+#        self.receive_status.refresh(percents)
 
-        self.receive_stats = {}
-        for char in self.receive_status.data:
-            self.receive_stats[char] = (100, randint(50,100))
-        percents = self.stats2percent(self.receive_stats)
-        self.receive_status.refresh(percents)
+#        from random import randint
+#
+#        self.send_stats = {}
+#        for char in self.send_status.data:
+#            self.send_stats[char] = (100, randint(50,100))
+#        percents = self.stats2percent(self.send_stats)
+#        self.send_status.refresh(percents)
+#
+#        self.receive_stats = {}
+#        for char in self.receive_status.data:
+#            self.receive_stats[char] = (100, randint(50,100))
+#        percents = self.stats2percent(self.receive_stats)
+#        self.receive_status.refresh(percents)
 
     def closeEvent(self, *args, **kwargs):
         """Program close - save the internal state."""
@@ -233,6 +247,15 @@ class MorseTrainer(QTabWidget):
             self.send_stats[char] = (0, 0)
             self.receive_stats[char] = (0, 0)
 
+        # these lists hold the Koch character set we test on
+        self.Koch_send_set = []
+        self.Koch_receive_set = []
+
+        # send and receive speeds
+        self.send_wpm = 5
+        self.send_cwpm = 5
+        self.receive_wpm = None     # not used yet
+
         # set the "previous tab" value
         self.previous_tab = MorseTrainer.SendTab
 
@@ -249,7 +272,9 @@ class MorseTrainer(QTabWidget):
             return
 
         try:
-            (self.send_stats, self.receive_stats) = data
+            (self.send_stats, self.receive_stats,
+             self.Koch_send_set, self.Koch_receive_set,
+             self.send_wpm, self.send_cwpm, self.receive_wpm) = data
         except KeyError:
             raise Exception('Invalid data in JSON file %s' % filename)
 
@@ -259,7 +284,9 @@ class MorseTrainer(QTabWidget):
         if filename is None:
             return
 
-        save_data = [self.send_stats, self.receive_stats]
+        save_data = (self.send_stats, self.receive_stats,
+                     self.Koch_send_set, self.Koch_receive_set,
+                     self.send_wpm, self.send_cwpm, self.receive_wpm)
         json_str = json.dumps(save_data, sort_keys=True, indent=4)
 
         with open(filename, 'w') as fd:
@@ -284,6 +311,20 @@ class MorseTrainer(QTabWidget):
             results[char] = fraction
 
         return results
+
+    def update_stats(self, stats_dict, char, ok):
+        """Update the stats for a single character.
+
+        stats_dict  a reference to the stats dictionary to update
+        char        the character that was tested
+        ok          True if test was good, else False
+        """
+
+        (num_tests, num_ok) = stats_dict[char]
+        num_tests += 1
+        if ok:
+            num_ok += 1
+        stats_dict[char] = (num_tests, num_ok)
 
     def tab_change(self, tab_index):
         """Handler when a tab is changed.
