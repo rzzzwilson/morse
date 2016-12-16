@@ -10,7 +10,7 @@ instructions = Instructions()
 """
 
 from PyQt5.QtWidgets import (QApplication, QWidget, QComboBox, QLabel,
-                             QHBoxLayout, QVBoxLayout, QGroupBox)
+                             QTextEdit, QHBoxLayout, QVBoxLayout, QGroupBox)
 
 class Instructions(QWidget):
     def __init__(self, text):
@@ -22,18 +22,13 @@ class Instructions(QWidget):
 
     def initUI(self, text):
         # define the widgets in this group
-        doc = QLabel(text)
-        doc.setWordWrap(True);
+        doc = QTextEdit(self)
+        doc.setReadOnly(True)
+        doc.insertPlainText(text)
 
+        # start the layout
         layout = QVBoxLayout()
-
-        groupbox = QGroupBox("Instructions")
-        layout.addWidget(groupbox)
-
-        hbox = QHBoxLayout()
-        hbox.addWidget(doc)
-        hbox.addStretch()
-
-        groupbox.setLayout(hbox)
+        layout.addWidget(doc)
+#        layout.addStretch()
 
         self.setLayout(layout)

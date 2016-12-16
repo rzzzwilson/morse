@@ -123,8 +123,6 @@ class Display(QWidget):
 
         # set the widget internal state
         self.setFixedHeight(Display.DefaultWidgetHeight)
-#        self.setMinimumSize(Display.DefaultWidgetWidth,
-#                            Display.DefaultWidgetHeight)
         self.fixed_font = QFont('Courier', Display.FontSize)
         self.font_size = Display.FontSize
         self.font = self.fixed_font
@@ -239,9 +237,17 @@ class Display(QWidget):
         # calc the max # chars we can fit on display
         self.num_columns = (width - Display.TextLeftOffset) // self.char_width
 
+        # clear the display area
         qp.setPen(Qt.white)
         qp.setBrush(Qt.white)
         qp.drawRect(0, 0, width, height)
+
+        # draw an outline
+        qp.setPen(Qt.black)
+#        qp.setBrush(Display.HoverBGNoneColour)
+        qp.drawRoundedRect(0, 0, self.display_width, self.display_height,
+                           Display.RoundedRadius,
+                           Display.RoundedRadius)
 
         # draw any highlights
         if self.highlight_index is not None:

@@ -36,10 +36,10 @@ import pyaudio
 
 
 class SendMorse:
-    """Send well-formed morse code to the spakers."""
+    """Send well-formed morse code to the speakers."""
 
     # the default settings
-    DefaultCWPM = 10             # character speed (characters per minute)
+    DefaultCWPM = 10            # character speed (characters per minute)
     DefaultWPM = 5              # word speed (words per minute)
     DefaultVolume = 0.7         # in range [0.0, 1.0]
     DefaultFrequency = 750      # hertz
@@ -109,7 +109,7 @@ class SendMorse:
         self.pyaudio.terminate()
 
     def make_tone(self, duration, volume):
-        """Create a strin full of sinewave data.
+        """Create a string full of sinewave data.
 
         Code modified from:
             http://milkandtang.com/blog/2013/02/16/making-noise-in-python/

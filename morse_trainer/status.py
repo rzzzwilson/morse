@@ -67,11 +67,15 @@ class Status(QWidget):
     else:
         raise Exception('Unrecognized platform: %s' % platform.system())
 
+    # proficiency at which Koch system adds another character
+    KochThreshold = 0.9
 
-    def __init__(self, data):
+
+    def __init__(self, data, threshold=KochThreshold):
         """Initialize the widget.
 
-        data  a string of characters to be displayed in the widget
+        data       a string of characters to be displayed in the widget
+        threshold  the fraction at which the Koch system adds a character
 
         The widget figures out how many bars there are from 'data'.
         """
@@ -79,12 +83,13 @@ class Status(QWidget):
         super().__init__()
 
         # declare state variables here so we know what they all are
-        self.data = data            # the characters to display
+        self.data = data            # the characters to display (in order)
+        self.fraction = None        # list of fractions matching self.data
+        self.threshold = threshold  # where we draw the threshold line
         self.font = None            # the font used
         self.font_size = None       # size of font
         self.widget_width = None    # set in initUI()
         self.widget_height = None   # set in initUI()
-        self.percent = None         # list of percentages matching self.data
 
         # set up the UI
         self.initUI()
@@ -113,10 +118,6 @@ class Status(QWidget):
         self.font = QFont(Status.Font, Status.FontSize)
         self.font_size = Status.FontSize
 
-        # draw the bars, with surround border
-
-        # draw data char headers (well, really 'bottomers' here)
-
     def paintEvent(self, e):
         """Prepare to draw the widget."""
 
@@ -131,9 +132,11 @@ class Status(QWidget):
         # set to the font we use in the widget
         qp.setFont(self.font)
 
-#        # draw an outline (debug)
-#        qp.setPen(Qt.black)
-#        qp.drawRect(0, 0, self.widget_width, self.widget_height)
+        # draw the threshold line
+        threshold_height = int(Status.BarHeight * self.threshold)
+        line_y = Status.TopMargin + Status.BarHeight - threshold_height
+        qp.setPen(Qt.red)
+        qp.drawLine(0, line_y, self.widget_width, line_y)
 
         # draw outline of each bar
         qp.setPen(Qt.gray)
@@ -144,11 +147,11 @@ class Status(QWidget):
             x += Status.BarWidth + Status.InterBarMargin
 
         # draw the percentage bar
-        if self.percent:
+        if self.fraction:
             x = Status.LeftMargin
             y = Status.TopMargin
             qp.setBrush(Qt.blue)
-            for (char, percent) in zip(self.data, self.percent):
+            for (char, percent) in zip(self.data, self.fraction):
                 pct_height = int(Status.BarHeight * percent)
                 if pct_height == 0:     # force *some* display if 0
                     pct_height = 1
@@ -165,14 +168,17 @@ class Status(QWidget):
             x += Status.BarWidth + Status.InterBarMargin
 
     def refresh(self, data):
-        """Update self.percent with values matching 'data'."""
+        """Update self.fraction with values matching 'data'.
 
-        self.percent = []
+        data  a dict of {char: percent} values
+        """
+
+        self.fraction = []
         for char in self.data:
             try:
                 value = data[char]
             except KeyError:
                 value = 0
-            self.percent.append(value)
+            self.fraction.append(value)
 
         self.update()
