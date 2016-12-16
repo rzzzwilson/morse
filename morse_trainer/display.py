@@ -240,7 +240,8 @@ class Display(QWidget):
         # clear the display area
         qp.setPen(Qt.white)
         qp.setBrush(Qt.white)
-        qp.drawRect(0, 0, width, height)
+        qp.drawRoundedRect(0, 0, width, height,
+                           Display.RoundedRadius, Display.RoundedRadius)
 
         # draw an outline
         qp.setPen(Qt.black)
