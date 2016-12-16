@@ -24,27 +24,11 @@ from charset import Charset
 from charset_status import CharsetStatus
 from instructions import Instructions
 import utils
-
 import logger
 log = logger.Log('debug.log', logger.Log.DEBUG)
 
 
-# set platform-dependent stuff, if any
-# we had to do this with wxpython, maybe pyqt is better?
-if platform.system() == 'Windows':
-    pass
-elif platform.system() == 'Linux':
-    pass
-elif platform.system() == 'Darwin':
-    pass
-else:
-    raise Exception('Unrecognized platform: %s' % platform.system())
-
-
-# set defaults
-DefaultWordsPerMinute = 10
-DefaultCharWordsPerMinute = 10
-
+# get program name and version
 ProgName = sys.argv[0]
 if ProgName.endswith('.py'):
         ProgName = ProgName[:-3]
@@ -52,11 +36,35 @@ if ProgName.endswith('.py'):
 ProgramMajor = 0
 ProgramMinor = 1
 ProgramVersion = '%d.%d' % (ProgramMajor, ProgramMinor)
-
-StateSaveFile = '%s.state' % ProgName
-
+log('Morse Trainer %s started' % ProgramVersion)
 
 class MorseTrainer(QTabWidget):
+
+    # set platform-dependent sizes
+    if platform.system() == 'Windows':
+        MinimumWidth = 815
+        MinimumHeight = 675
+    elif platform.system() == 'Linux':
+        MinimumWidth = 815
+        MinimumHeight = 675
+    elif platform.system() == 'Darwin':
+        MinimumWidth = 815
+        MinimumHeight = 675
+    else:
+        raise Exception('Unrecognized platform: %s' % platform.system())
+
+    # set default speeds
+    DefaultWordsPerMinute = 10
+    DefaultCharWordsPerMinute = 10
+
+    # constants for the three tabs
+    SendTab = 0
+    ReceiveTab = 1
+    StatisticsTab = 2
+
+    # name for the state save file
+    StateSaveFile = '%s.state' % ProgName
+
     def __init__(self, parent = None):
         super(MorseTrainer, self).__init__(parent)
 
@@ -64,10 +72,12 @@ class MorseTrainer(QTabWidget):
         self.clear_data()
 
         # get state from the save file, if any
-        self.load_state(StateSaveFile)
+        self.load_state(MorseTrainer.StateSaveFile)
 
         # define the UI
         self.initUI()
+
+        self.currentChanged.connect(self.tab_change)
 
     def initUI(self):
         self.send_tab = QWidget()
@@ -77,10 +87,13 @@ class MorseTrainer(QTabWidget):
         self.addTab(self.send_tab, 'Send')
         self.addTab(self.receive_tab, 'Receive')
         self.addTab(self.stats_tab, 'Status')
+
         self.initSendTab()
         self.initReceiveTab()
         self.InitStatsTab()
-        self.setFixedSize(815, 675)
+
+        self.setMinimumSize(MorseTrainer.MinimumWidth, MorseTrainer.MinimumHeight)
+        self.setMaximumHeight(MorseTrainer.MinimumHeight)
         self.setWindowTitle('Morse Trainer %s' % ProgramVersion)
 
     def initSendTab(self):
@@ -207,7 +220,7 @@ class MorseTrainer(QTabWidget):
         """Program close - save the internal state."""
 
         super().closeEvent(*args, **kwargs)
-        self.save_state(StateSaveFile)
+        self.save_state(MorseTrainer.StateSaveFile)
 
     def clear_data(self):
         """Define and clear all internal variables."""
@@ -219,6 +232,9 @@ class MorseTrainer(QTabWidget):
         for char in utils.Alphabetics + utils.Numbers + utils.Punctuation:
             self.send_stats[char] = (0, 0)
             self.receive_stats[char] = (0, 0)
+
+        # set the "previous tab" value
+        self.previous_tab = MorseTrainer.SendTab
 
     def load_state(self, filename):
         """Load saved state from the given file."""
@@ -269,18 +285,30 @@ class MorseTrainer(QTabWidget):
 
         return results
 
-    def currentChanged(self, tab_index):
+    def tab_change(self, tab_index):
         """Handler when a tab is changed.
 
         tab_index  index of the new tab
         """
 
-        percents = self.stats2percent(self.send_stats)
-        self.send_status.refresh(percents)
+        # if we left the "send" tab, turn off action, if any
+        if self.previous_tab == MorseTrainer.SendTab:
+            log('tab_change: turning off send action')
 
-        percents = self.stats2percent(self.receive_stats)
-        self.receive_status.refresh(percents)
+        # if we left the "receive" tab, turn off action, if any
+        if self.previous_tab == MorseTrainer.ReceiveTab:
+            log('tab_change: turning off receive action')
 
+        # if we changed to the "statistics" tab, refresh the stats widget
+        if tab_index == MorseTrainer.StatisticsTab:
+            percents = self.stats2percent(self.send_stats)
+            self.send_status.refresh(percents)
+
+            percents = self.stats2percent(self.receive_stats)
+            self.receive_status.refresh(percents)
+
+        # remember the previous tab for NEXT TIME WE CHANGE
+        self.previous_tab = tab_index
 
 
 if __name__ == '__main__':
