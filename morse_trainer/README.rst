@@ -11,9 +11,8 @@ It is also a really good way to learn PyQt5!
 Current Status
 --------------
 
-Most of the custom widgets have been written and at least partially tested.
-Now need to work on the main program, which will have a 3 pane tabbed interface.
-The panes will be **Send**, **Receive** and **Status**.
+The UI is mostly complete, barring any unforeseen things.  Next step is to
+start putting code under the UI, probably starting with "receive".
 
 Requirements
 ------------
