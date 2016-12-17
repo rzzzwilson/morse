@@ -8,7 +8,7 @@ Used to select character and word speeds.
 
 speed = Speeds()
 
-speeds = speed.getSpeeds()
+(wpm, cwpm) = speed.getSpeeds()
 
 The widget generates a signal '.changed' when some value changes.
 The owning code must interrogate the widget for the values.
@@ -25,7 +25,7 @@ from PyQt5.QtCore import pyqtSignal
 class Speeds(QWidget):
 
     # signal raised when any value changes
-    changed = pyqtSignal()
+    changed = pyqtSignal(int, int)
 
     # maximum and minimum speeds
     MinSpeed = 5
@@ -37,6 +37,10 @@ class Speeds(QWidget):
         self.setWindowTitle('Test Speeds widget')
         self.setFixedHeight(80)
         self.show()
+
+        # define state variables
+        self.word_speed = word_speed
+        self.char_speed = char_speed
 
     def initUI(self, word_speed, char_speed):
         # define the widgets we are going to use
@@ -75,33 +79,50 @@ class Speeds(QWidget):
 
         self.setLayout(layout)
 
-    def handle_wordspeed_change(self, value):
+    def handle_wordspeed_change(self, word_speed):
         """Word speed changed.
 
         Ensure the character speed is not less and send a signal.
         """
 
-        char_speed = self.spb_chars.value()
+        self.word_speed = word_speed
 
-        if char_speed < value:
-            self.spb_chars.setValue(value)
+        if self.char_speed < word_speed:
+            self.char_speed = word_speed
+            self.spb_chars.setValue(word_speed)
 
-        self.changed.emit()
+        self.changed.emit(self.word_speed, self.char_speed)
 
-    def handle_charspeed_change(self, value):
+    def handle_charspeed_change(self, char_speed):
         """Character speed changed.
 
         Ensure the character speed is not less and send a signal.
         """
 
-        word_speed = self.spb_words.value()
+        self.char_speed = char_speed
 
-        if value < word_speed:
-            self.spb_words.setValue(value)
+        if char_speed < self.word_speed:
+            self.word_speed = char_speed
+            self.spb_words.setValue(char_speed)
 
-        self.changed.emit()
+        self.changed.emit(self.word_speed, self.char_speed)
+
+    def setSpeeds(self, wpm, cwpm):
+        """Set the speeds.
+
+        wpm   the overall words per minute
+        cwpm  the character WPM
+        """
+
+        self.word_speed = wpm
+        self.char_speed = cwpm
+
+        self.spb_words.setValue(wpm)
+        self.spb_chars.setValue(cwpm)
 
     def getSpeeds(self):
         """Return the speeds as a tuple: (word_speed, char_speed)."""
 
-        return (self.spb_words.value(), self.spb_chars.value())
+        print('getSpeeds: .word_speed=%d, .char_speed=%d' % (self.word_speed, self.char_speed))
+
+        return (self.word_speed, self.char_speed)
