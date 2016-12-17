@@ -254,6 +254,8 @@ class Charset(QWidget):
         import sys
         sys.stdout.flush()
 
+        self.koch_num = self.sb_KochNumber.value()
+
     def handleCharsetButton(self, gs):
         """Handle a click on any charset button.
 
@@ -288,3 +290,21 @@ class Charset(QWidget):
 
         self.handleCharsetButton(self.gs_Punct)
 
+    def setValues(self, koch, koch_num, user_charset):
+        """Update internal values and redraw.
+
+        koch          True if using Koch, False if using user charset
+        koch_num      number of Koch characters being used
+        user_charset  the user charset being used
+        """
+
+        self.koch = koch
+        self.koch_num = koch_num
+        self.user_charset = user_charset
+
+        # now set the UI to show the above state
+        self.rb_Koch.setChecked(koch)
+        self.rb_User.setChecked(not koch)
+        self.sb_KochNumber.setValue(koch_num)
+
+        self.update()
