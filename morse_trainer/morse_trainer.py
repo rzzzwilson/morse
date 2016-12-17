@@ -65,6 +65,14 @@ class MorseTrainer(QTabWidget):
     # name for the state save file
     StateSaveFile = '%s.state' % ProgName
 
+    # define names of the state variables to be saved/restored
+    StateVarNames = ['send_stats', 'receive_stats',
+                     'Koch_send_set', 'Koch_receive_set',
+                     'User_receive_set',
+                     'receive_wpm', 'receive_cwpm', 'send_wpm',
+                     'receive_grouping']
+
+
     def __init__(self, parent = None):
         super(MorseTrainer, self).__init__(parent)
 
@@ -77,7 +85,12 @@ class MorseTrainer(QTabWidget):
         # define the UI
         self.initUI()
 
-        self.currentChanged.connect(self.tab_change)
+        # update visible controls with state values
+        self.update_UI()
+
+        # connect events to slots
+        self.currentChanged.connect(self.tab_change)    # QTabWidget tab changed
+        self.receive_groups.change.connect(self.receive_group_change)
 
     def initUI(self):
         self.send_tab = QWidget()
@@ -99,12 +112,12 @@ class MorseTrainer(QTabWidget):
     def initSendTab(self):
         # define widgets on this tab
         self.send_display = Display()
-        doc_text = ('Here we test your sending accuracy.  The program '
-                    'will print the character you should send in the '
-                    'top row of the display above.  Your job is to send '
-                    'that character using your key and code practice '
-                    'oscillator.  The program will print what it thinks '
-                    'you sent on the lower line of the display.')
+        doc_text = ('Here we test your sending accuracy.  The program will '
+                    'print the character you should send in the top row of the '
+                    'display at the top of this tab.  Your job is to send that '
+                    'character using your key and code practice oscillator.  '
+                    'The program will print what it thinks you sent on the '
+                    'lower line of the display.')
         instructions = Instructions(doc_text)
         self.btn_send_start_stop = QPushButton('Start')
         self.btn_send_clear = QPushButton('Clear')
@@ -165,6 +178,9 @@ class MorseTrainer(QTabWidget):
         layout.addLayout(hbox)
         self.receive_tab.setLayout(layout)
 
+        # tie events raised here to handlers
+        self.receive_speeds.changed.connect(self.receive_speeds_changed)
+
     def InitStatsTab(self):
         doc_text = ('This shows your sending and receiving accuracy. '
                     'Each bar shows your accuracy for a character.  The '
@@ -201,34 +217,27 @@ class MorseTrainer(QTabWidget):
         self.stats_tab.setLayout(layout)
 
         # connect the 'Clear' button to debug code
-        btn_clear.clicked.connect(self.xyzzy)
+#        btn_clear.clicked.connect(self.xyzzy)
 
-    def xyzzy(self):
-        """Make fake data and update the stats."""
+    def update_UI(self):
+        """Update controls that show state values."""
 
-        pass
+        # the receive speeds
+        self.receive_speeds.setSpeeds(self.receive_wpm, self.receive_cwpm)
 
-#        self.update_stats(self.send_stats, 'A', True)
-#        percents = self.stats2percent(self.send_stats)
-#        self.send_status.refresh(percents)
-#
-#        self.update_stats(self.receive_stats, 'B', False)
-#        percents = self.stats2percent(self.receive_stats)
-#        self.receive_status.refresh(percents)
+        # the receive test sets (Koch and user-selected)
+        self.receive_charset.setValues(self.Using_Koch, self.Koch_number, self.User_receive_set)
 
-#        from random import randint
-#
-#        self.send_stats = {}
-#        for char in self.send_status.data:
-#            self.send_stats[char] = (100, randint(50,100))
-#        percents = self.stats2percent(self.send_stats)
-#        self.send_status.refresh(percents)
-#
-#        self.receive_stats = {}
-#        for char in self.receive_status.data:
-#            self.receive_stats[char] = (100, randint(50,100))
-#        percents = self.stats2percent(self.receive_stats)
-#        self.receive_status.refresh(percents)
+    def receive_speeds_changed(self, wpm, cwpm):
+        """Something in the "receive speed" group changed."""
+
+        self.receive_wpm = wpm
+        self.receive_cwpm = cwpm
+
+    def receive_group_change(self, grouping):
+        """Receive grouping changed."""
+
+        self.receive_grouping = grouping
 
     def closeEvent(self, *args, **kwargs):
         """Program close - save the internal state."""
@@ -247,14 +256,20 @@ class MorseTrainer(QTabWidget):
             self.send_stats[char] = (0, 0)
             self.receive_stats[char] = (0, 0)
 
-        # these lists hold the Koch character set we test on
+        # the character sets we test on and associated variables
+        self.Using_Koch = True
+        self.Koch_number = 2
         self.Koch_send_set = []
-        self.Koch_receive_set = []
+        self.Koch_receive_set = utils.Koch[:self.Koch_number]
+        self.User_receive_set = []
 
         # send and receive speeds
-        self.send_wpm = 5
-        self.send_cwpm = 5
-        self.receive_wpm = None     # not used yet
+        self.send_wpm = None        # not used yet
+        self.receive_wpm = 5
+        self.receive_cwpm = 5
+
+        # the receive grouping
+        self.receive_grouping = 0
 
         # set the "previous tab" value
         self.previous_tab = MorseTrainer.SendTab
@@ -262,6 +277,7 @@ class MorseTrainer(QTabWidget):
     def load_state(self, filename):
         """Load saved state from the given file."""
 
+        # read JSON from file, if we can
         if filename is None:
             return
 
@@ -271,22 +287,29 @@ class MorseTrainer(QTabWidget):
         except FileNotFoundError:
             return
 
-        try:
-            (self.send_stats, self.receive_stats,
-             self.Koch_send_set, self.Koch_receive_set,
-             self.send_wpm, self.send_cwpm, self.receive_wpm) = data
-        except KeyError:
-            raise Exception('Invalid data in JSON file %s' % filename)
+        # get data from the restore dictionary, if possible
+        for var_name in MorseTrainer.StateVarNames:
+            try:
+                value = data[var_name]
+            except KeyError:
+                pass
+            else:
+                setattr(self, var_name, value)
+
+        # now update UI state from state variables
 
     def save_state(self, filename):
         """Save saved state to the given file."""
 
+        # write data to the save file, if any
         if filename is None:
             return
 
-        save_data = (self.send_stats, self.receive_stats,
-                     self.Koch_send_set, self.Koch_receive_set,
-                     self.send_wpm, self.send_cwpm, self.receive_wpm)
+        # create a dictionary filled with save data
+        save_data = {}
+        for var_name in MorseTrainer.StateVarNames:
+            save_data[var_name] = getattr(self, var_name)
+
         json_str = json.dumps(save_data, sort_keys=True, indent=4)
 
         with open(filename, 'w') as fd:
