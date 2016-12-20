@@ -86,10 +86,8 @@ class Groups(QWidget):
         group  a group number in (0, 3, 4, 5, 6, 7, 8)
         """
 
-        print('Groups;setState: group=%s' % str(group))
         self.group = group
         index = Groups.Group2Index[group]
-        print('Groups;setState: index=%s' % str(index))
         self.combo.setCurrentIndex(index)
         self.combo.update()
 

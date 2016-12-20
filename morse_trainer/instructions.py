@@ -4,7 +4,7 @@
 """
 The 'instructions' widget for Morse Trainer.
 
-Used to show a QLabel containing instructions.
+Used to show a QLabel containing instructions.  Read only.
 
 instructions = Instructions()
 """
