@@ -8,7 +8,8 @@ Used to select character and word speeds.
 
 speed = Speeds()
 
-(wpm, cwpm) = speed.getSpeeds()
+speed.setState(wpm, cwpm)
+(wpm, cwpm) = speed.getState()
 
 The widget generates a signal '.changed' when some value changes.
 The owning code must interrogate the widget for the values.
@@ -58,10 +59,6 @@ class Speeds(QWidget):
         self.spb_chars.setValue(char_speed)
         self.spb_chars.setSuffix(' wpm')
 
-        # connect spinbox events to handlers
-        self.spb_words.valueChanged.connect(self.handle_wordspeed_change)
-        self.spb_chars.valueChanged.connect(self.handle_charspeed_change)
-
         # start the layout
         layout = QVBoxLayout()
 
@@ -78,6 +75,10 @@ class Speeds(QWidget):
         groupbox.setLayout(hbox)
 
         self.setLayout(layout)
+
+        # connect spinbox events to handlers
+        self.spb_words.valueChanged.connect(self.handle_wordspeed_change)
+        self.spb_chars.valueChanged.connect(self.handle_charspeed_change)
 
     def handle_wordspeed_change(self, word_speed):
         """Word speed changed.
@@ -107,7 +108,7 @@ class Speeds(QWidget):
 
         self.changed.emit(self.word_speed, self.char_speed)
 
-    def setSpeeds(self, wpm, cwpm):
+    def setState(self, wpm, cwpm):
         """Set the speeds.
 
         wpm   the overall words per minute
@@ -120,9 +121,9 @@ class Speeds(QWidget):
         self.spb_words.setValue(wpm)
         self.spb_chars.setValue(cwpm)
 
-    def getSpeeds(self):
+    def getState(self):
         """Return the speeds as a tuple: (word_speed, char_speed)."""
 
-        print('getSpeeds: .word_speed=%d, .char_speed=%d' % (self.word_speed, self.char_speed))
+        print('getState: .word_speed=%d, .char_speed=%d' % (self.word_speed, self.char_speed))
 
         return (self.word_speed, self.char_speed)

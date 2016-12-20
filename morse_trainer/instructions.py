@@ -29,6 +29,5 @@ class Instructions(QWidget):
         # start the layout
         layout = QVBoxLayout()
         layout.addWidget(doc)
-#        layout.addStretch()
 
         self.setLayout(layout)

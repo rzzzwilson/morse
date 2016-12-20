@@ -167,7 +167,7 @@ class Status(QWidget):
             qp.drawText(x, y, char)
             x += Status.BarWidth + Status.InterBarMargin
 
-    def refresh(self, data):
+    def setState(self, data):
         """Update self.fraction with values matching 'data'.
 
         data  a dict of {char: percent} values

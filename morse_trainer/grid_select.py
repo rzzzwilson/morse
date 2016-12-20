@@ -163,12 +163,12 @@ class GridSelect(QWidget):
 
         return (row, col)
 
-    def get_selection(self):
+    def getStatus(self):
         """Return widget selection status as a dictionary."""
 
         return self.status
 
-    def set_selection(self, status):
+    def setStatus(self, status):
         """Set widget selection according to status dictionary."""
 
         # set status and state of each button

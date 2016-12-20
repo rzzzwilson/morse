@@ -86,12 +86,17 @@ class CharsetStatus(QWidget):
 
         self.setLayout(layout)
 
-    def refresh(self, data):
+#    def getStatus(self):
+#        """Not used - widget is write-only."""
+#
+#        pass
+
+    def setStatus(self, data):
         """Update the three sub-widgets with values matching 'data'."""
 
-        self.st_alpha.refresh(data)
-        self.st_number.refresh(data)
-        self.st_punct.refresh(data)
+        self.st_alpha.setState(data)
+        self.st_number.setState(data)
+        self.st_punct.setState(data)
 
         self.update()
 
