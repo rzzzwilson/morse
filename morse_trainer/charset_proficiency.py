@@ -4,9 +4,10 @@
 """
 A PyQt5 custom widget used by Morse Trainer.
 
-Show the status of all chars in the charset - alphas, numbers and punctuation.
+Show the proficiency of all chars in the charset:
+    alphas, numbers and punctuation.
 
-show_status = CharsetStatus(alpha_data, number_data, punctuation_data)
+show_status = CharsetProficiency(alpha_data, number_data, punctuation_data)
 
 where '*_data' is the string used to establish a GridDisplay.
 
@@ -25,10 +26,10 @@ from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QGroupBox
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QPainter, QFont
 
-from status import Status
+from proficiency import Proficiency
 
 
-class CharsetStatus(QWidget):
+class CharsetProficiency(QWidget):
     """Widget to display a set of bars displaying success percentages."""
 
     # set platform-dependent sizes
@@ -66,9 +67,9 @@ class CharsetStatus(QWidget):
         """Set up the UI."""
 
         # create all sub-widgets
-        self.st_alpha = Status(self.alpha)
-        self.st_number = Status(self.number)
-        self.st_punct = Status(self.punct)
+        self.st_alpha = Proficiency(self.alpha)
+        self.st_number = Proficiency(self.number)
+        self.st_punct = Proficiency(self.punct)
 
         # layout the widget
         layout = QVBoxLayout()
@@ -86,12 +87,12 @@ class CharsetStatus(QWidget):
 
         self.setLayout(layout)
 
-#    def getStatus(self):
+#    def getState(self):
 #        """Not used - widget is write-only."""
 #
 #        pass
 
-    def setStatus(self, data):
+    def setState(self, data):
         """Update the three sub-widgets with values matching 'data'."""
 
         self.st_alpha.setState(data)

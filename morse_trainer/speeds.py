@@ -22,6 +22,8 @@ from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QVBoxLayout
 from PyQt5.QtWidgets import QLabel, QSpinBox, QGroupBox
 from PyQt5.QtCore import pyqtSignal
 
+import utils
+
 
 class Speeds(QWidget):
 
@@ -63,6 +65,7 @@ class Speeds(QWidget):
         layout = QVBoxLayout()
 
         groupbox = QGroupBox("Speeds")
+        groupbox.setStyleSheet(utils.StyleCSS)
         layout.addWidget(groupbox)
 
         hbox = QHBoxLayout()
@@ -123,7 +126,5 @@ class Speeds(QWidget):
 
     def getState(self):
         """Return the speeds as a tuple: (word_speed, char_speed)."""
-
-        print('getState: .word_speed=%d, .char_speed=%d' % (self.word_speed, self.char_speed))
 
         return (self.word_speed, self.char_speed)

@@ -4,9 +4,9 @@
 """
 A PyQt5 custom widget used by Morse Trainer.
 
-Status shows the error rate for a GridDisplay data set.
+Proficiency shows the proficiency for a GridDisplay data set.
 
-show_status = Status(data)
+show_status = Proficiency(data)
 
 where 'data' is the string used to establish a GridDisplay.
 
@@ -24,7 +24,7 @@ from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QPainter, QFont
 
 
-class Status(QWidget):
+class Proficiency(QWidget):
     """Widget to display a set of bars displaying success percentages."""
 
     # set platform-dependent sizes
@@ -34,7 +34,7 @@ class Status(QWidget):
         TopMargin = 5               # top margin to bar
         LeftMargin = 5              # left margin to bar
         RightMargin = 5             # right margin to bar
-        BottomMargin = 14           # bottom margin to bar
+        BottomMargin = 18           # bottom margin to bar
         LabelBottomMargin = 3       # bottom margin to text
         LabelLeftMargin = 7         # left margin to text
         InterBarMargin = 3          # margin between bars
@@ -101,11 +101,11 @@ class Status(QWidget):
         num_chars = len(self.data)
 
         # figure out the widget size
-        widget_width = (Status.LeftMargin + num_chars*Status.BarWidth
-                        + (num_chars-1)*Status.InterBarMargin
-                        + Status.RightMargin)
-        widget_height = (Status.TopMargin + Status.BarHeight
-                         + Status.BottomMargin)
+        widget_width = (Proficiency.LeftMargin + num_chars*Proficiency.BarWidth
+                        + (num_chars-1)*Proficiency.InterBarMargin
+                        + Proficiency.RightMargin)
+        widget_height = (Proficiency.TopMargin + Proficiency.BarHeight
+                         + Proficiency.BottomMargin)
 
         self.setFixedWidth(widget_width)
         self.setFixedHeight(widget_height)
@@ -115,8 +115,8 @@ class Status(QWidget):
         self.widget_height = widget_height
 
         # set the widget internal state
-        self.font = QFont(Status.Font, Status.FontSize)
-        self.font_size = Status.FontSize
+        self.font = QFont(Proficiency.Font, Proficiency.FontSize)
+        self.font_size = Proficiency.FontSize
 
     def paintEvent(self, e):
         """Prepare to draw the widget."""
@@ -133,39 +133,39 @@ class Status(QWidget):
         qp.setFont(self.font)
 
         # draw the threshold line
-        threshold_height = int(Status.BarHeight * self.threshold)
-        line_y = Status.TopMargin + Status.BarHeight - threshold_height
+        threshold_height = int(Proficiency.BarHeight * self.threshold)
+        line_y = Proficiency.TopMargin + Proficiency.BarHeight - threshold_height
         qp.setPen(Qt.red)
         qp.drawLine(0, line_y, self.widget_width, line_y)
 
         # draw outline of each bar
         qp.setPen(Qt.gray)
-        x = Status.LeftMargin
-        y = Status.TopMargin
+        x = Proficiency.LeftMargin
+        y = Proficiency.TopMargin
         for _ in self.data:
-            qp.drawRect(x, y, Status.BarWidth, Status.BarHeight)
-            x += Status.BarWidth + Status.InterBarMargin
+            qp.drawRect(x, y, Proficiency.BarWidth, Proficiency.BarHeight)
+            x += Proficiency.BarWidth + Proficiency.InterBarMargin
 
         # draw the percentage bar
         if self.fraction:
-            x = Status.LeftMargin
-            y = Status.TopMargin
+            x = Proficiency.LeftMargin
+            y = Proficiency.TopMargin
             qp.setBrush(Qt.blue)
             for (char, percent) in zip(self.data, self.fraction):
-                pct_height = int(Status.BarHeight * percent)
+                pct_height = int(Proficiency.BarHeight * percent)
                 if pct_height == 0:     # force *some* display if 0
                     pct_height = 1
-                top_height = Status.BarHeight - pct_height
-                qp.drawRect(x, y+top_height, Status.BarWidth, pct_height)
-                x += Status.BarWidth + Status.InterBarMargin
+                top_height = Proficiency.BarHeight - pct_height
+                qp.drawRect(x, y+top_height, Proficiency.BarWidth, pct_height)
+                x += Proficiency.BarWidth + Proficiency.InterBarMargin
 
         # draw column 'footer' header
-        x = Status.LabelLeftMargin
-        y = self.widget_height - Status.LabelBottomMargin
+        x = Proficiency.LabelLeftMargin
+        y = self.widget_height - Proficiency.LabelBottomMargin
         qp.setPen(Qt.black)
         for char in self.data:
             qp.drawText(x, y, char)
-            x += Status.BarWidth + Status.InterBarMargin
+            x += Proficiency.BarWidth + Proficiency.InterBarMargin
 
     def setState(self, data):
         """Update self.fraction with values matching 'data'.

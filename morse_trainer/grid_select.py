@@ -17,7 +17,7 @@ grid_select.clear()
 The state of the characters is returned (and set) as a dictionary:
     d = {'A': True, 'B': False, ...}
 
-Raises a '.changed' signal on any state change.
+Raises a '.changed' signal on any state change.  Event includes self.status.
 """
 
 import platform
@@ -58,9 +58,8 @@ class GridSelect(QWidget):
     else:
         raise Exception('Unrecognized platform: %s' % platform.system())
 
-    # signal raised when internal state changes
-    changed = pyqtSignal()
-
+    # prepare the signals
+    changed = pyqtSignal(dict, name='changed')
 
     def __init__(self, data, max_cols=12):
         """Initialize the widget.
@@ -86,7 +85,6 @@ class GridSelect(QWidget):
 
         # set up the UI
         self.initUI()
-
         self.clear()
 
     def initUI(self):
@@ -143,7 +141,7 @@ class GridSelect(QWidget):
         self.status[label] = not self.status[label]
 
         # emit a 'changed' signal
-        self.changed.emit()
+        self.changed.emit(self.status)
 
     def x2index(self, x, y):
         """Convert widget x,y coordinate to row,column indices.
@@ -163,12 +161,12 @@ class GridSelect(QWidget):
 
         return (row, col)
 
-    def getStatus(self):
+    def getState(self):
         """Return widget selection status as a dictionary."""
 
         return self.status
 
-    def setStatus(self, status):
+    def setState(self, status):
         """Set widget selection according to status dictionary."""
 
         # set status and state of each button
@@ -183,11 +181,8 @@ class GridSelect(QWidget):
                 button.setChecked(new_status)
                 self.status[label] = new_status
 
-        # tell the world that we've changed
-        self.changed.emit()
-
     def clear(self):
-        """Set all gird buttons to OFF."""
+        """Set all grid buttons to OFF."""
 
         for char in self.data:
             self.status[char] = False

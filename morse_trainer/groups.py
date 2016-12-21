@@ -16,10 +16,14 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import (QApplication, QWidget, QComboBox, QLabel,
                              QHBoxLayout, QVBoxLayout, QGroupBox)
 
+import utils
+
+
 class Groups(QWidget):
 
     # signal raised when any value changes
     changed = pyqtSignal(int)
+
 
     # order of options and associated value
     Selects = [(0, 'No grouping'),
@@ -62,6 +66,7 @@ class Groups(QWidget):
         layout = QVBoxLayout()
 
         groupbox = QGroupBox("Groups")
+        groupbox.setStyleSheet(utils.StyleCSS)
         layout.addWidget(groupbox)
 
         hbox = QHBoxLayout()
@@ -80,7 +85,7 @@ class Groups(QWidget):
         self.group = Groups.Index2Group[index]
         self.changed.emit(self.group)
 
-    def setStatus(self, group):
+    def setState(self, group):
         """Set the selected grouping.
         
         group  a group number in (0, 3, 4, 5, 6, 7, 8)
@@ -91,7 +96,7 @@ class Groups(QWidget):
         self.combo.setCurrentIndex(index)
         self.combo.update()
 
-    def getStatus(self):
+    def getState(self):
         """Return the grouping selected.
         
         Returns either:

@@ -21,7 +21,7 @@ from display import Display
 from speeds import Speeds
 from groups import Groups
 from charset import Charset
-from charset_status import CharsetStatus
+from charset_proficiency import CharsetProficiency
 from instructions import Instructions
 import utils
 import logger
@@ -46,7 +46,7 @@ class MorseTrainer(QTabWidget):
         MinimumHeight = 675
     elif platform.system() == 'Linux':
         MinimumWidth = 815
-        MinimumHeight = 675
+        MinimumHeight = 655
     elif platform.system() == 'Darwin':
         MinimumWidth = 815
         MinimumHeight = 675
@@ -72,9 +72,9 @@ class MorseTrainer(QTabWidget):
 
     # define names of the state variables to be saved/restored
     StateVarNames = ['send_stats', 'receive_stats',
-                     'receive_using_Koch', 'receive_Koch_number', 'receive_Koch_set',
-                     'receive_User_set', 'receive_wpm', 'receive_cwpm', 'receive_group_index',
-                     'send_wpm', 'send_Koch_set',
+                     'receive_using_Koch', 'receive_Koch_number', 'receive_Koch_list',
+                     'receive_User_list', 'receive_wpm', 'receive_cwpm', 'receive_group_index',
+                     'send_wpm', 'send_Koch_list',
                      'current_tab_index']
 
 
@@ -188,8 +188,8 @@ class MorseTrainer(QTabWidget):
         self.receive_speeds.changed.connect(self.receive_speeds_changed)
 
     def InitStatsTab(self):
-        doc_text = ('This shows your sending and receiving accuracy. '
-                    'Each bar shows your accuracy for a character.  The '
+        doc_text = ('This shows your sending and receiving proficiency. '
+                    'Each bar shows your proficiency for a character.  The '
                     'taller the bar the better.  You need to practice the '
                     'characters with shorter bars.\n\n'
                     'The red line shows the Koch threshold.  In Koch mode '
@@ -198,15 +198,15 @@ class MorseTrainer(QTabWidget):
                     'are tested with.\n\n'
                     'Pressing the "Clear" button will clear the statistics.')
         instructions = Instructions(doc_text)
-        self.send_status = CharsetStatus('Send Accuracy', utils.Alphabetics,
-                                         utils.Numbers, utils.Punctuation)
+        self.send_status = CharsetProficiency('Send Proficiency', utils.Alphabetics,
+                                              utils.Numbers, utils.Punctuation)
         percents = self.stats2percent(self.send_stats)
-        self.send_status.setStatus(percents)
-        self.receive_status = CharsetStatus('Receive Accuracy',
-                                            utils.Alphabetics, utils.Numbers,
-                                            utils.Punctuation)
+        self.send_status.setState(percents)
+        self.receive_status = CharsetProficiency('Receive Proficiency',
+                                                 utils.Alphabetics, utils.Numbers,
+                                                 utils.Punctuation)
         percents = self.stats2percent(self.receive_stats)
-        self.receive_status.setStatus(percents)
+        self.receive_status.setState(percents)
         btn_clear = QPushButton('Clear')
 
         hbox = QHBoxLayout()
@@ -232,9 +232,10 @@ class MorseTrainer(QTabWidget):
         self.receive_speeds.setState(self.receive_wpm, self.receive_cwpm)
 
         # the receive test sets (Koch and user-selected)
-        log('update_UI: .receive_using_Koch=%s, .receive_Koch_number=%d, .receive_User_set=%s'
-                % (str(self.receive_using_Koch), self.receive_Koch_number, str(self.receive_User_set)))
-        self.receive_charset.setState(self.receive_using_Koch, self.receive_Koch_number, self.receive_User_set)
+        log('update_UI: .receive_using_Koch=%s, .receive_Koch_number=%d, .receive_User_list=%s'
+                % (str(self.receive_using_Koch), self.receive_Koch_number, str(self.receive_User_list)))
+        user_chars_dict = utils.list2dict(self.receive_User_list)
+        self.receive_charset.setState(self.receive_using_Koch, self.receive_Koch_number, user_chars_dict)
 
     def receive_speeds_changed(self, wpm, cwpm):
         """Something in the "receive speed" group changed."""
@@ -252,7 +253,7 @@ class MorseTrainer(QTabWidget):
 
         (self.receive_using_Koch,
          self.receive_Koch_number,
-         self.receive_User_set) = self.receive_charset.getState()
+         self.receive_User_list) = self.receive_charset.getState()
         log('receive_charset_change: self.receive_using_Koch=%s' % str(self.receive_using_Koch))
         self.update_UI()
 
@@ -276,9 +277,9 @@ class MorseTrainer(QTabWidget):
         # the character sets we test on and associated variables
         self.receive_using_Koch = True
         self.receive_Koch_number = 2
-        self.send_Koch_set = []
-        self.receive_Koch_set = utils.Koch[:self.receive_Koch_number]
-        self.receive_User_set = []
+        self.send_Koch_list = []
+        self.receive_Koch_list = utils.Koch[:self.receive_Koch_number]
+        self.receive_User_list = []
 
         # send and receive speeds
         self.send_wpm = None        # not used yet
@@ -315,7 +316,7 @@ class MorseTrainer(QTabWidget):
                 setattr(self, var_name, value)
 
         # now update UI state from state variables
-        self.receive_groups.setStatus(self.receive_group_index)
+        self.receive_groups.setState(self.receive_group_index)
         log('load_state: self.receive_using_Koch=%s' % str(self.receive_using_Koch))
 
         self.set_app_tab(self.current_tab_index)
@@ -391,10 +392,10 @@ class MorseTrainer(QTabWidget):
         # if we changed to the "statistics" tab, refresh the stats widget
         if tab_index == MorseTrainer.StatisticsTab:
             percents = self.stats2percent(self.send_stats)
-            self.send_status.setStatus(percents)
+            self.send_status.setState(percents)
 
             percents = self.stats2percent(self.receive_stats)
-            self.receive_status.setStatus(percents)
+            self.receive_status.setState(percents)
 
         # remember the previous tab for NEXT TIME WE CHANGE
         self.previous_tab_index = tab_index
