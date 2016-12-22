@@ -82,6 +82,9 @@ sound_examples/*
 
 ::
 
+Real morse sound files from various sources.  Most useful files are from the [ARRL code
+practice site](http://www.arrl.org/code-practice-files).  Various other files contain
+noisy morse that I might try recognizing later.
 
 Example/Ideas Code
 ------------------
