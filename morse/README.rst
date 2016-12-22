@@ -17,7 +17,7 @@ after the program prints an asterisk:
 
 The design is described here_.
 
-.. _here: https://github.com/rzzzwilson/morse/blob/master/design.rst
+.. _here: https://github.com/rzzzwilson/morse/blob/master/morse/design.rst
 
 
 Files
