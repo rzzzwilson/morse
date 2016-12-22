@@ -6,10 +6,13 @@ Small utility functions.
 """
 
 
+# various charsets
 Alphabetics = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 Numbers = '0123456789'
 Punctuation = """?,.!=/()'":;"""
 AllUserChars = Alphabetics + Numbers + Punctuation
+
+# amalgameted charset in the 'Koch' order
 Koch = """KMRSUAPTLOWI.NJE=F0Y,VG5/Q9ZH38B?427C1D6X?():;!"'"""
 
 StyleCSS = """
