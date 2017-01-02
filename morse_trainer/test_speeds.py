@@ -34,7 +34,7 @@ class SpeedsExample(QWidget):
     def speed_changed(self, char_speed):
         print('Changed speeds, cwpm=%d' % char_speed)
         print('Change overall speed to %d' % char_speed)
-        self.speed_group.setSpeed(char_speed)
+        self.speed_group.setState(char_speed)
 
 
 app = QApplication(sys.argv)

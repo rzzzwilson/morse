@@ -12,9 +12,10 @@ import json
 import platform
 
 from PyQt5.QtCore import Qt, pyqtSignal, QObject, QThread
-from PyQt5.QtWidgets import QApplication, QHBoxLayout, QVBoxLayout, QWidget, QTabWidget
-from PyQt5.QtWidgets import QFormLayout, QLineEdit, QRadioButton, QLabel, QCheckBox
-from PyQt5.QtWidgets import QPushButton, QMessageBox, QSpacerItem
+from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QVBoxLayout, QWidget,
+                             QTabWidget, QFormLayout, QLineEdit, QRadioButton,
+                             QLabel, QCheckBox, QPushButton, QMessageBox,
+                             QSpacerItem)
 
 import receive_morse
 from display import Display
@@ -71,10 +72,10 @@ class MorseTrainer(QTabWidget):
     StateSaveFile = '%s.state' % ProgName
 
     # define names of the state variables to be saved/restored
-    StateVarNames = ['send_stats', 'receive_stats',
-                     'receive_using_Koch', 'receive_Koch_number', 'receive_Koch_list',
-                     'receive_User_list', 'receive_wpm', 'receive_cwpm', 'receive_group_index',
-                     'send_wpm', 'send_Koch_list',
+    StateVarNames = ['send_stats', 'receive_stats', 'receive_using_Koch',
+                     'receive_Koch_number', 'receive_Koch_list',
+                     'receive_User_list', 'receive_wpm', 'receive_cwpm',
+                     'receive_group_index', 'send_wpm', 'send_Koch_list',
                      'current_tab_index']
 
 
@@ -229,7 +230,7 @@ class MorseTrainer(QTabWidget):
         """Update controls that show state values."""
 
         # the receive speeds
-        self.receive_speeds.setSpeed(self.receive_wpm)
+        self.receive_speeds.setState(self.receive_wpm)
 
         # the receive test sets (Koch and user-selected)
         log('update_UI: .receive_using_Koch=%s, .receive_Koch_number=%d, .receive_User_list=%s'
@@ -237,23 +238,27 @@ class MorseTrainer(QTabWidget):
         user_chars_dict = utils.list2dict(self.receive_User_list)
         self.receive_charset.setState(self.receive_using_Koch, self.receive_Koch_number, user_chars_dict)
 
-    def receive_speeds_changed(self, cwpm):
-        """Something in the "receive speed" group changed."""
+    def receive_speeds_changed(self, cwpm, wpm):
+        """Something in the "receive speed" group changed.
+
+        cwpm  new char speed
+        wpm   new word speed
+        """
 
         self.receive_cwpm = cwpm
+        self.receive_wpm = wpm
 
     def receive_group_change(self, index):
         """Receive grouping changed."""
 
         self.receive_group_index = index
 
-    def receive_charset_change(self):
+    def receive_charset_change(self, state):
         """Handle a chage in the Receive charset group widget."""
 
         (self.receive_using_Koch,
-         self.receive_Koch_number,
-         self.receive_User_list) = self.receive_charset.getState()
-        log('receive_charset_change: self.receive_using_Koch=%s' % str(self.receive_using_Koch))
+         self.receive_Koch_number, self.receive_User_list) = state
+        log('receive_charset_change: state=%s' % str(state))
         self.update_UI()
 
     def closeEvent(self, *args, **kwargs):
@@ -283,7 +288,7 @@ class MorseTrainer(QTabWidget):
 
         # send and receive speeds
         self.send_wpm = None        # not used yet
-        self.receive_wpm = 0
+        self.receive_wpm = 5
         self.receive_cwpm = 5
 
         # the receive grouping
@@ -318,9 +323,30 @@ class MorseTrainer(QTabWidget):
                 log('load_state: setting var %s to %s' % (var_name, str(value)))
                 setattr(self, var_name, value)
 
+#    StateVarNames = ['send_stats', 'receive_stats', 'receive_using_Koch',
+#                     'receive_Koch_number', 'receive_Koch_list',
+#                     'receive_User_list', 'receive_wpm', 'receive_cwpm',
+#                     'receive_group_index', 'send_wpm', 'send_Koch_list',
+#                     'current_tab_index']
+
+        #####
         # now update UI state from state variables
+        #####
+
+        # the speed
+        self.receive_speeds.setState(self.receive_wpm, cwpm=self.receive_cwpm)
+        log('load_state: set receive speed: %s' % str(self.receive_cwpm))
+        # the grouping
         self.receive_groups.setState(self.receive_group_index)
-        log('load_state: self.receive_using_Koch=%s' % str(self.receive_using_Koch))
+        log('load_state: set receive group index: %s' % str(self.receive_group_index))
+        # the charset used
+        self.receive_charset.setState(self.receive_using_Koch,
+                                      self.receive_Koch_number,
+                                      self.receive_User_list)
+        log('load_state: set .receive_using_Koch=%s\n.receive_Koch_number=%s\n'
+            '.receive_User_list=%s' % (str(self.receive_using_Koch),
+                                       str(self.receive_Koch_number),
+                                       str(self.receive_User_list)))
 
         self.set_app_tab(self.current_tab_index)
 

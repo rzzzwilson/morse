@@ -7,15 +7,13 @@ A PyQt5 custom widget used by Morse Trainer.
 Shows the characters to be used in the send/receive tests.  Use either
 the Koch suggested set or a custom set.
 
-charset = Charset()
+charset = Charset(Koch_status, Koch_number, User_charset)
 
-charset.setKoch(status)
-charset.setKochNumber(n)
+charset.setState(Koch_status, Koch_number, User_charset)
+(Koch_status, Koch_number, User_charset) = charset.getSelected()
 
-charset.setSelected(selection)
-selection = charset.getSelected()
-
-Raises a '.changed' signal on any state change.
+Raises a '.changed' signal on any state change.  The event receives a tuple:
+    (Koch_status, Koch_number, User_charset)
 """
 
 import platform
@@ -132,26 +130,37 @@ class Charset(QWidget):
         grid.setVerticalSpacing(1)
 
         row = 0
-        grid.addWidget(self.rb_Koch, row, 0, 1, 3, alignment=Qt.AlignLeft|Qt.AlignVCenter)
-        grid.addWidget(koch_using, row, 3, alignment=Qt.AlignRight|Qt.AlignVCenter)
-        grid.addWidget(self.sb_KochNumber, row, 4, alignment=Qt.AlignLeft|Qt.AlignVCenter)
+        grid.addWidget(self.rb_Koch, row, 0, 1, 3,
+                       alignment=Qt.AlignLeft|Qt.AlignVCenter)
+        grid.addWidget(koch_using, row, 3,
+                       alignment=Qt.AlignRight|Qt.AlignVCenter)
+        grid.addWidget(self.sb_KochNumber, row, 4,
+                       alignment=Qt.AlignLeft|Qt.AlignVCenter)
 
         row += 1
         grid.addWidget(self.rb_User, row, 0, 1, 3, alignment=Qt.AlignLeft)
-        grid.addWidget(user_using, row, 3, alignment=Qt.AlignRight|Qt.AlignVCenter)
-        grid.addWidget(self.lbl_UserNumber, row, 4, alignment=Qt.AlignLeft|Qt.AlignVCenter)
+        grid.addWidget(user_using, row, 3,
+                       alignment=Qt.AlignRight|Qt.AlignVCenter)
+        grid.addWidget(self.lbl_UserNumber, row, 4,
+                       alignment=Qt.AlignLeft|Qt.AlignVCenter)
 
         row += 1
-        grid.addWidget(self.btn_Alphas, row, 1, alignment=Qt.AlignRight|Qt.AlignVCenter)
-        grid.addWidget(self.gs_Alphas, row, 2, 2, 3, alignment=Qt.AlignLeft|Qt.AlignCenter)
+        grid.addWidget(self.btn_Alphas, row, 1,
+                       alignment=Qt.AlignRight|Qt.AlignVCenter)
+        grid.addWidget(self.gs_Alphas, row, 2, 2, 3,
+                       alignment=Qt.AlignLeft|Qt.AlignCenter)
 
         row += 2
-        grid.addWidget(self.btn_Numbers, row, 1, 2, 1, alignment=Qt.AlignRight|Qt.AlignVCenter)
-        grid.addWidget(self.gs_Numbers, row, 2, 2, 3, alignment=Qt.AlignLeft|Qt.AlignVCenter)
+        grid.addWidget(self.btn_Numbers, row, 1, 2, 1,
+                       alignment=Qt.AlignRight|Qt.AlignVCenter)
+        grid.addWidget(self.gs_Numbers, row, 2, 2, 3,
+                       alignment=Qt.AlignLeft|Qt.AlignVCenter)
 
         row += 2
-        grid.addWidget(self.btn_Punct, row, 1, 2, 1, alignment=Qt.AlignRight|Qt.AlignVCenter)
-        grid.addWidget(self.gs_Punct, row, 2, 2, 3, alignment=Qt.AlignLeft|Qt.AlignVCenter)
+        grid.addWidget(self.btn_Punct, row, 1, 2, 1,
+                       alignment=Qt.AlignRight|Qt.AlignVCenter)
+        grid.addWidget(self.gs_Punct, row, 2, 2, 3,
+                       alignment=Qt.AlignLeft|Qt.AlignVCenter)
 
         # add empty column that stretches
         grid.addItem(QSpacerItem(1,1), row, 4)
