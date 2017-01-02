@@ -22,7 +22,8 @@ class TestCharsetProficiency(QWidget):
 
     def initUI(self):
         self.status = CharsetProficiency('Test Status', utils.Alphabetics,
-                                    utils.Numbers, utils.Punctuation)
+                                                        utils.Numbers,
+                                                        utils.Punctuation)
         redisplay_button = QPushButton('Redisplay', self)
 
         hbox1 = QHBoxLayout()
@@ -48,7 +49,11 @@ class TestCharsetProficiency(QWidget):
         # generate random data
         new = {}
         for char in self.status.data:
-            new[char] = randint(0,100)/100
+            if char in 'A0?':
+                # first in each set is 0.0
+                new[char] = 0.0
+            else:
+                new[char] = randint(0,100)/100
         self.status.setState(new)
 
 

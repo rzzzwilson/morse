@@ -21,7 +21,8 @@ class TestCharset(QWidget):
 
     def initUI(self):
         user_charset = {'A':True, '0':True}
-        self.display = Charset(koch_selected=False, koch_num=2, user_charset=user_charset)
+        self.display = Charset(koch_selected=False, koch_num=2,
+                               user_charset=user_charset)
 
         hbox1 = QHBoxLayout()
         hbox1.addWidget(self.display)
