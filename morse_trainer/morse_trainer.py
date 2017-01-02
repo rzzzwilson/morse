@@ -229,7 +229,7 @@ class MorseTrainer(QTabWidget):
         """Update controls that show state values."""
 
         # the receive speeds
-        self.receive_speeds.setState(self.receive_wpm, self.receive_cwpm)
+        self.receive_speeds.setSpeed(self.receive_wpm)
 
         # the receive test sets (Koch and user-selected)
         log('update_UI: .receive_using_Koch=%s, .receive_Koch_number=%d, .receive_User_list=%s'
@@ -237,10 +237,9 @@ class MorseTrainer(QTabWidget):
         user_chars_dict = utils.list2dict(self.receive_User_list)
         self.receive_charset.setState(self.receive_using_Koch, self.receive_Koch_number, user_chars_dict)
 
-    def receive_speeds_changed(self, wpm, cwpm):
+    def receive_speeds_changed(self, cwpm):
         """Something in the "receive speed" group changed."""
 
-        self.receive_wpm = wpm
         self.receive_cwpm = cwpm
 
     def receive_group_change(self, index):
@@ -277,13 +276,14 @@ class MorseTrainer(QTabWidget):
         # the character sets we test on and associated variables
         self.receive_using_Koch = True
         self.receive_Koch_number = 2
-        self.send_Koch_list = []
-        self.receive_Koch_list = utils.Koch[:self.receive_Koch_number]
+        self.receive_Koch_list = [char for char in utils.Koch[:self.receive_Koch_number]]
         self.receive_User_list = []
+
+        self.send_Koch_list = [] # [char for char in utils.Koch[:self.send_Koch_number]]
 
         # send and receive speeds
         self.send_wpm = None        # not used yet
-        self.receive_wpm = 5
+        self.receive_wpm = 0
         self.receive_cwpm = 5
 
         # the receive grouping
@@ -298,12 +298,14 @@ class MorseTrainer(QTabWidget):
 
         # read JSON from file, if we can
         if filename is None:
+            log('load_state: no state file configured to recover from')
             return
 
         try:
             with open(filename, 'r') as fd:
                 data = json.load(fd)
         except FileNotFoundError:
+            log("load_state: state file %s not found" % filename)
             return
 
         # get data from the restore dictionary, if possible
@@ -313,6 +315,7 @@ class MorseTrainer(QTabWidget):
             except KeyError:
                 pass
             else:
+                log('load_state: setting var %s to %s' % (var_name, str(value)))
                 setattr(self, var_name, value)
 
         # now update UI state from state variables

@@ -4,22 +4,21 @@
 """
 A PyQt5 custom widget used by Morse Trainer.
 
-Used to select character and word speeds.
+Used to select character speed and show overall word speed.
 
 speed = Speeds()
 
-speed.setState(wpm, cwpm)
-(wpm, cwpm) = speed.getState()
+speed.setSpeed(wpm)     # sets the overall speed display
+cwpm = speed.getState() # get the char wpm value set by the user
 
 The widget generates a signal '.changed' when some value changes.
-The owning code must interrogate the widget for the values.
 """
 
 import platform
 from random import randint
 
 from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QVBoxLayout
-from PyQt5.QtWidgets import QLabel, QSpinBox, QGroupBox
+from PyQt5.QtWidgets import QLabel, QSpinBox, QGroupBox, QLineEdit
 from PyQt5.QtCore import pyqtSignal
 
 import utils
@@ -27,32 +26,29 @@ import utils
 
 class Speeds(QWidget):
 
-    # signal raised when any value changes
-    changed = pyqtSignal(int, int)
+    # signal raised when user changes cwpm
+    changed = pyqtSignal(int)
 
     # maximum and minimum speeds
     MinSpeed = 5
     MaxSpeed = 40
 
-    def __init__(self, word_speed=MinSpeed, char_speed=MinSpeed):
+    def __init__(self, char_speed=MinSpeed):
         QWidget.__init__(self)
-        self.initUI(word_speed, char_speed)
+        self.initUI(char_speed)
         self.setWindowTitle('Test Speeds widget')
         self.setFixedHeight(80)
         self.show()
 
         # define state variables
-        self.word_speed = word_speed
         self.char_speed = char_speed
 
-    def initUI(self, word_speed, char_speed):
+    def initUI(self, char_speed):
         # define the widgets we are going to use
         lbl_words = QLabel('  Overall')
-        self.spb_words = QSpinBox(self)
-        self.spb_words.setMinimum(Speeds.MinSpeed)
-        self.spb_words.setMaximum(Speeds.MaxSpeed)
-        self.spb_words.setValue(word_speed)
-        self.spb_words.setSuffix(' wpm')
+        self.led_words = QLineEdit(self)
+        self.led_words.text = ''
+        self.led_words.setReadOnly(True)
 
         lbl_chars = QLabel('Characters')
         self.spb_chars = QSpinBox(self)
@@ -72,7 +68,7 @@ class Speeds(QWidget):
         hbox.addWidget(lbl_chars)
         hbox.addWidget(self.spb_chars)
         hbox.addWidget(lbl_words)
-        hbox.addWidget(self.spb_words)
+        hbox.addWidget(self.led_words)
         hbox.addStretch()
 
         groupbox.setLayout(hbox)
@@ -80,51 +76,26 @@ class Speeds(QWidget):
         self.setLayout(layout)
 
         # connect spinbox events to handlers
-        self.spb_words.valueChanged.connect(self.handle_wordspeed_change)
         self.spb_chars.valueChanged.connect(self.handle_charspeed_change)
 
-    def handle_wordspeed_change(self, word_speed):
-        """Word speed changed.
-
-        Ensure the character speed is not less and send a signal.
-        """
-
-        self.word_speed = word_speed
-
-        if self.char_speed < word_speed:
-            self.char_speed = word_speed
-            self.spb_chars.setValue(word_speed)
-
-        self.changed.emit(self.word_speed, self.char_speed)
-
     def handle_charspeed_change(self, char_speed):
-        """Character speed changed.
-
-        Ensure the character speed is not less and send a signal.
-        """
+        """Character speed changed."""
 
         self.char_speed = char_speed
+        self.changed.emit(self.char_speed)
 
-        if char_speed < self.word_speed:
-            self.word_speed = char_speed
-            self.spb_words.setValue(char_speed)
+    def setSpeed(self, wpm):
+        """Set the overall wpm speed.
 
-        self.changed.emit(self.word_speed, self.char_speed)
-
-    def setState(self, wpm, cwpm):
-        """Set the speeds.
-
-        wpm   the overall words per minute
-        cwpm  the character WPM
+        wpm   the overall words per minute (integer)
         """
 
         self.word_speed = wpm
-        self.char_speed = cwpm
-
-        self.spb_words.setValue(wpm)
-        self.spb_chars.setValue(cwpm)
+        new_display = '%d wpm' % wpm
+        self.led_words.setText(new_display)
+        self.update()
 
     def getState(self):
-        """Return the speeds as a tuple: (word_speed, char_speed)."""
+        """Return the character speed."""
 
-        return (self.word_speed, self.char_speed)
+        return self.char_speed
