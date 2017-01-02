@@ -39,7 +39,7 @@ class TestCharset(QWidget):
 
     def changeCharsetHandler(self, status):
         """The widget has changed.
-        
+
         status  a dict {'A':True, 'B':False, ...} which is the new status
         """
 
