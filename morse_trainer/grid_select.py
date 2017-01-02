@@ -37,8 +37,8 @@ class GridSelect(QWidget):
         FontSize = 12               # font size
         TopOffset = 5               # top offset of first row
         LeftOffset = 5              # left offset of first column
-        RowHeight = 25              # pixel height of a row
-        ColWidth = 25               # pixel width of a column
+        RowHeight = 30              # pixel height of a row
+        ColWidth = 30               # pixel width of a column
     elif platform.system() == 'Darwin':
         MaxColumns = 12
         Font = 'Courier'

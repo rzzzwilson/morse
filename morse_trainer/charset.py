@@ -93,19 +93,19 @@ class Charset(QWidget):
         # arrange for widget to start signalling now
         self.make_signal = True
 
-        self.setFixedHeight(250)
+        self.setFixedHeight(270)
         self.show()
 
     def initUI(self):
         """Set up the UI."""
 
         # create all the sub-widgets
-        self.rb_Koch = QRadioButton("Use the Koch character set")
+        self.rb_Koch = QRadioButton('Use the Koch character set')
         koch_using = QLabel('Using:')
         self.sb_KochNumber = QSpinBox(self)
         self.sb_KochNumber.setMinimum(Charset.KochMin)
         self.sb_KochNumber.setMaximum(Charset.KochMax)
-        self.rb_User = QRadioButton("Select the characters to use")
+        self.rb_User = QRadioButton('Select the characters to use')
         user_using = QLabel('Using:')
         self.lbl_UserNumber = QLabel('0')
         self.btn_Alphas = QPushButton('Alphabet', self)
@@ -127,9 +127,9 @@ class Charset(QWidget):
 
         # put widgets into a grid
         grid = QGridLayout()
-        grid.setSpacing(2)
-        grid.setHorizontalSpacing(5)
-        grid.setVerticalSpacing(5)
+        grid.setSpacing(1)
+        grid.setHorizontalSpacing(2)
+        grid.setVerticalSpacing(1)
 
         row = 0
         grid.addWidget(self.rb_Koch, row, 0, 1, 3, alignment=Qt.AlignLeft|Qt.AlignVCenter)
@@ -142,22 +142,16 @@ class Charset(QWidget):
         grid.addWidget(self.lbl_UserNumber, row, 4, alignment=Qt.AlignLeft|Qt.AlignVCenter)
 
         row += 1
-        grid.addWidget(self.btn_Alphas, row, 1,
-                       alignment=Qt.AlignRight|Qt.AlignVCenter)
-        grid.addWidget(self.gs_Alphas, row, 2, 2, 3,
-                       alignment=Qt.AlignLeft|Qt.AlignCenter)
+        grid.addWidget(self.btn_Alphas, row, 1, alignment=Qt.AlignRight|Qt.AlignVCenter)
+        grid.addWidget(self.gs_Alphas, row, 2, 2, 3, alignment=Qt.AlignLeft|Qt.AlignCenter)
 
         row += 2
-        grid.addWidget(self.btn_Numbers, row, 1, 2, 1,
-                       alignment=Qt.AlignRight|Qt.AlignVCenter)
-        grid.addWidget(self.gs_Numbers, row, 2, 2, 3,
-                       alignment=Qt.AlignLeft|Qt.AlignVCenter)
+        grid.addWidget(self.btn_Numbers, row, 1, 2, 1, alignment=Qt.AlignRight|Qt.AlignVCenter)
+        grid.addWidget(self.gs_Numbers, row, 2, 2, 3, alignment=Qt.AlignLeft|Qt.AlignVCenter)
 
         row += 2
-        grid.addWidget(self.btn_Punct, row, 1, 2, 1,
-                       alignment=Qt.AlignRight|Qt.AlignVCenter)
-        grid.addWidget(self.gs_Punct, row, 2, 2, 3,
-                       alignment=Qt.AlignLeft|Qt.AlignVCenter)
+        grid.addWidget(self.btn_Punct, row, 1, 2, 1, alignment=Qt.AlignRight|Qt.AlignVCenter)
+        grid.addWidget(self.gs_Punct, row, 2, 2, 3, alignment=Qt.AlignLeft|Qt.AlignVCenter)
 
         # add empty column that stretches
         grid.addItem(QSpacerItem(1,1), row, 4)
@@ -166,7 +160,7 @@ class Charset(QWidget):
         groupbox.setLayout(grid)
         self.setLayout(layout)
 
-        self.setMinimumSize(440, 250)
+        self.setMinimumSize(550, 250)
 
         self.setWindowTitle('Test of Charset widget')
         self.show()
@@ -274,7 +268,7 @@ class Charset(QWidget):
 
         # update "in use" count for user chars
         self.setUserCount()
- 
+
         self.was_changed()
 
     def was_changed(self):
@@ -319,9 +313,9 @@ class Charset(QWidget):
         # update "in use" count for user chars
         self.user_charset = self.getSelected()
         self.setUserCount()
-        self.was_changed()
-
         self.update()
+
+        self.was_changed()
 
     def setUserCount(self):
         """Update the "in use" count for user characters."""
