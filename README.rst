@@ -1,4 +1,4 @@
-Code associated with recognizing and teach morse code.
+Code associated with generating morse code sounds.
 
 The directories:
 
