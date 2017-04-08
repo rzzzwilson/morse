@@ -59,7 +59,7 @@ LenDash = LenDot * 3
 DotDashThreshold = (LenDot + LenDash)//2       # threshold between dot & dash
 
 MaxSignal = 30000
-MinSignalX = 500
+MinSignal = 500
 SignalThreshold = 10000
 
 # lower sampling rate counters
@@ -133,7 +133,7 @@ def save_params(path):
                  'CharSpace': CharSpace,
                  'WordSpace': WordSpace,
                  'MaxSignal': MaxSignal,
-                 'MinSignalX': MinSignalX,
+                 'MinSignal': MinSignal,
                  'SignalThreshold': SignalThreshold
                  }
 
@@ -149,7 +149,7 @@ def load_params(path):
 
     global LenDot, LenDash, DotDashThreshold
     global CharSpace, WordSpace
-    global MaxSignal, MinSignalX, SignalThreshold
+    global MaxSignal, MinSignal, SignalThreshold
 
     try:
         with open(path, 'r') as fd:
@@ -164,7 +164,7 @@ def load_params(path):
         CharSpace = data['CharSpace']
         WordSpace = data['WordSpace']
         MaxSignal = data['MaxSignal']
-        MinSignalX = data['MinSignalX']
+        MinSignal = data['MinSignal']
         SignalThreshold = data['SignalThreshold']
     except KeyError:
         print('Invalid data in JSON file %s' % path)
@@ -221,6 +221,7 @@ def get_sample(stream):
         data = np.fromstring(data, 'int16')
         data = [abs(x) for x in data]
         value = int(sum(data) // len(data))      # average value
+        log('AVG value=%d' % value)
         values.append(value)
 
         if state == S_SILENCE:
@@ -250,7 +251,7 @@ def read_morse(stream):
     """Read Morse data from 'stream' and decode into English."""
 
     global LenDot, LenDash, DotDashThreshold, CharSpace, WordSpace
-    global MaxSignal, MinSignalX, SignalThreshold
+    global MaxSignal, MinSignal, SignalThreshold
 
     log('read_morse: LenDot=%d, LenDash=%d, DotDashThreshold=%d, CharSpace=%d, WordSpace=%d'
         % (LenDot, LenDash, DotDashThreshold, CharSpace, WordSpace))
@@ -293,7 +294,7 @@ def read_morse(stream):
             # got a silence, bump silence counters & capture minimum
             space_count += 1
             word_count += 1
-            MinSignalX = level
+            MinSignal = level
 
             # if silence long enough, emit a space
             if space_count >= CharSpace:
@@ -316,10 +317,10 @@ def read_morse(stream):
                 word_count = 0
 
         # set new signal threshold
-        SignalThreshold = (MinSignalX + 2*MaxSignal)//3
+        SignalThreshold = (MinSignal + 2*MaxSignal)//3
 
-        log('LenDot=%d, LenDash=%d, DotDashThreshold=%d, CharSpace=%d, WordSpace=%d'
-            % (LenDot, LenDash, DotDashThreshold, CharSpace, WordSpace))
+        log('SignalThreshold=%d, LenDot=%d, LenDash=%d, DotDashThreshold=%d, CharSpace=%d, WordSpace=%d'
+            % (SignalThreshold, LenDot, LenDash, DotDashThreshold, CharSpace, WordSpace))
 
 def usage(msg=None):
     if msg:
