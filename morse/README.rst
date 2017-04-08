@@ -17,7 +17,7 @@ after the program prints an asterisk:
 
 The design is described here_.
 
-.. _here: https://github.com/rzzzwilson/morse/blob/master/design.rst
+.. _here: https://github.com/rzzzwilson/morse/blob/master/morse/design.rst
 
 
 Files
@@ -82,6 +82,9 @@ sound_examples/*
 
 ::
 
+    Real morse sound files from various sources.  Most useful files are from the
+    ARRL code practice site (http://www.arrl.org/code-practice-files).  Various
+    other files contain noisy morse that I might try recognizing later.
 
 Example/Ideas Code
 ------------------

@@ -2,18 +2,18 @@
 # -*- coding: utf-8 -*-
 
 """
-Test the 'show status' widget.
+Test the 'show proficiency' widget.
 """
 
 import sys
 from random import randint
 from PyQt5.QtWidgets import (QApplication, QWidget, QPushButton,
                              QHBoxLayout, QVBoxLayout)
-from status import Status
+from proficiency import Proficiency
 import utils
 
 
-class StatusExample(QWidget):
+class ProficiencyExample(QWidget):
     """Application to demonstrate the Morse Trainer 'display' widget."""
 
     def __init__(self):
@@ -22,9 +22,9 @@ class StatusExample(QWidget):
 
 
     def initUI(self):
-        self.alphabet_status = Status(utils.Alphabetics)
-        self.numbers_status = Status(utils.Numbers)
-        self.punctuation_status = Status(utils.Punctuation)
+        self.alphabet_status = Proficiency(utils.Alphabetics)
+        self.numbers_status = Proficiency(utils.Numbers)
+        self.punctuation_status = Proficiency(utils.Punctuation)
         redisplay_button = QPushButton('Redisplay', self)
 
         hbox1 = QHBoxLayout()
@@ -43,7 +43,7 @@ class StatusExample(QWidget):
         redisplay_button.clicked.connect(self.redisplayButtonClicked)
 
         self.setGeometry(100, 100, 800, 200)
-        self.setWindowTitle('Example of Status widget')
+        self.setWindowTitle('Example of Proficiency widget')
         self.show()
 
     def redisplayButtonClicked(self):
@@ -58,9 +58,9 @@ class StatusExample(QWidget):
             # set first character to 0
             new[gd.data[0]] = 0
             # redisplay
-            gd.refresh(new)
+            gd.setState(new)
 
 
 app = QApplication(sys.argv)
-ex = StatusExample()
+ex = ProficiencyExample()
 sys.exit(app.exec())

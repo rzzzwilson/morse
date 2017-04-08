@@ -7,12 +7,14 @@ A class that reads morse from the microphone.
 Will be used in its own thread by Morse Trainer.
 """
 
+import platform
+
 import receive_morse
 from display import Display
 from speeds import Speeds
 from groups import Groups
 from charset import Charset
-from charset_status import CharsetStatus
+from charset_proficiency import CharsetProficiency
 from instructions import Instructions
 import utils
 
@@ -40,7 +42,7 @@ ProgramVersion = '%d.%d' % (ProgramMajor, ProgramMinor)
 DefaultWordsPerMinute = 10
 DefaultCharWordsPerMinute = 10
 
-StateSaveFile = '
+StateSaveFile = ''
 
 class Communicate(QObject):
     """Signal/slot communication class."""
@@ -211,9 +213,9 @@ class MorseTrainer(QTabWidget):
                     'characters with shorter bars.\n\n'
                     'Pressing the "Clear" button will clear the statistics.')
         instructions = Instructions(doc_text)
-        self.send_status = CharsetStatus('Send Proficiency', utils.Alphabetics,
+        self.send_status = CharsetProficiency('Send Proficiency', utils.Alphabetics,
                                          utils.Numbers, utils.Punctuation)
-        self.receive_status = CharsetStatus('Receive Proficiency',
+        self.receive_status = CharsetProficiency('Receive Proficiency',
                                             utils.Alphabetics, utils.Numbers,
                                             utils.Punctuation)
         btn_clear = QPushButton('Clear')

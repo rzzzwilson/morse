@@ -72,9 +72,6 @@ class SendMorse:
              'Y': '-.--', 'Z': '--..'
             }
 
-    # order of learning with the Koch method
-    KochOrder = 'KMRSUAPTLOWI.NJE=F0Y,VG5/Q9ZH38B?427C1D6X'
-
 
     def __init__(self, volume=DefaultVolume, frequency=DefaultFrequency,
                        cwpm=DefaultCWPM, wpm=DefaultWPM):

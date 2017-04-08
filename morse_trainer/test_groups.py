@@ -31,6 +31,13 @@ class TestGroups(QWidget):
         self.setWindowTitle('Example of Groups widget')
         self.show()
 
+        self.grouping.changed.connect(self.change_grouping)
+
+    def change_grouping(self, index):
+        """Handler for event when 'Groups' object changes."""
+
+        print('change_grouping: index=%s' % str(index))
+
 
 app = QApplication(sys.argv)
 ex = TestGroups()

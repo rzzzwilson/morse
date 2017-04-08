@@ -12,16 +12,17 @@ import json
 import platform
 
 from PyQt5.QtCore import Qt, pyqtSignal, QObject, QThread
-from PyQt5.QtWidgets import QApplication, QHBoxLayout, QVBoxLayout, QWidget, QTabWidget
-from PyQt5.QtWidgets import QFormLayout, QLineEdit, QRadioButton, QLabel, QCheckBox
-from PyQt5.QtWidgets import QPushButton, QMessageBox, QSpacerItem
+from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QVBoxLayout, QWidget,
+                             QTabWidget, QFormLayout, QLineEdit, QRadioButton,
+                             QLabel, QCheckBox, QPushButton, QMessageBox,
+                             QSpacerItem)
 
 import receive_morse
 from display import Display
 from speeds import Speeds
 from groups import Groups
 from charset import Charset
-from charset_status import CharsetStatus
+from charset_proficiency import CharsetProficiency
 from instructions import Instructions
 import utils
 import logger
@@ -46,7 +47,7 @@ class MorseTrainer(QTabWidget):
         MinimumHeight = 675
     elif platform.system() == 'Linux':
         MinimumWidth = 815
-        MinimumHeight = 675
+        MinimumHeight = 655
     elif platform.system() == 'Darwin':
         MinimumWidth = 815
         MinimumHeight = 675
@@ -62,15 +63,20 @@ class MorseTrainer(QTabWidget):
     ReceiveTab = 1
     StatisticsTab = 2
 
+    # dict to convert tab index to name
+    TabIndex2Name = {SendTab: 'Send',
+                     ReceiveTab: 'Receive',
+                     StatisticsTab: 'Statistics'}
+
     # name for the state save file
     StateSaveFile = '%s.state' % ProgName
 
     # define names of the state variables to be saved/restored
-    StateVarNames = ['send_stats', 'receive_stats',
-                     'Koch_send_set', 'Koch_receive_set',
-                     'User_receive_set',
-                     'receive_wpm', 'receive_cwpm', 'send_wpm',
-                     'receive_grouping']
+    StateVarNames = ['send_stats', 'receive_stats', 'receive_using_Koch',
+                     'receive_Koch_number', 'receive_Koch_list',
+                     'receive_User_list', 'receive_wpm', 'receive_cwpm',
+                     'receive_group_index', 'send_wpm', 'send_Koch_list',
+                     'current_tab_index']
 
 
     def __init__(self, parent = None):
@@ -79,18 +85,14 @@ class MorseTrainer(QTabWidget):
         # define internal state variables
         self.clear_data()
 
-        # get state from the save file, if any
-        self.load_state(MorseTrainer.StateSaveFile)
-
         # define the UI
         self.initUI()
 
+        # get state from the save file, if any
+        self.load_state(MorseTrainer.StateSaveFile)
+
         # update visible controls with state values
         self.update_UI()
-
-        # connect events to slots
-        self.currentChanged.connect(self.tab_change)    # QTabWidget tab changed
-        self.receive_groups.change.connect(self.receive_group_change)
 
     def initUI(self):
         self.send_tab = QWidget()
@@ -108,6 +110,11 @@ class MorseTrainer(QTabWidget):
         self.setMinimumSize(MorseTrainer.MinimumWidth, MorseTrainer.MinimumHeight)
         self.setMaximumHeight(MorseTrainer.MinimumHeight)
         self.setWindowTitle('Morse Trainer %s' % ProgramVersion)
+
+        # connect events to slots
+        self.currentChanged.connect(self.tab_change)    # QTabWidget tab changed
+        self.receive_groups.changed.connect(self.receive_group_change)
+        self.receive_charset.changed.connect(self.receive_charset_change)
 
     def initSendTab(self):
         # define widgets on this tab
@@ -182,8 +189,8 @@ class MorseTrainer(QTabWidget):
         self.receive_speeds.changed.connect(self.receive_speeds_changed)
 
     def InitStatsTab(self):
-        doc_text = ('This shows your sending and receiving accuracy. '
-                    'Each bar shows your accuracy for a character.  The '
+        doc_text = ('This shows your sending and receiving proficiency. '
+                    'Each bar shows your proficiency for a character.  The '
                     'taller the bar the better.  You need to practice the '
                     'characters with shorter bars.\n\n'
                     'The red line shows the Koch threshold.  In Koch mode '
@@ -192,15 +199,15 @@ class MorseTrainer(QTabWidget):
                     'are tested with.\n\n'
                     'Pressing the "Clear" button will clear the statistics.')
         instructions = Instructions(doc_text)
-        self.send_status = CharsetStatus('Send Accuracy', utils.Alphabetics,
-                                         utils.Numbers, utils.Punctuation)
+        self.send_status = CharsetProficiency('Send Proficiency', utils.Alphabetics,
+                                              utils.Numbers, utils.Punctuation)
         percents = self.stats2percent(self.send_stats)
-        self.send_status.refresh(percents)
-        self.receive_status = CharsetStatus('Receive Accuracy',
-                                            utils.Alphabetics, utils.Numbers,
-                                            utils.Punctuation)
+        self.send_status.setState(percents)
+        self.receive_status = CharsetProficiency('Receive Proficiency',
+                                                 utils.Alphabetics, utils.Numbers,
+                                                 utils.Punctuation)
         percents = self.stats2percent(self.receive_stats)
-        self.receive_status.refresh(percents)
+        self.receive_status.setState(percents)
         btn_clear = QPushButton('Clear')
 
         hbox = QHBoxLayout()
@@ -223,21 +230,36 @@ class MorseTrainer(QTabWidget):
         """Update controls that show state values."""
 
         # the receive speeds
-        self.receive_speeds.setSpeeds(self.receive_wpm, self.receive_cwpm)
+        self.receive_speeds.setState(self.receive_wpm)
 
         # the receive test sets (Koch and user-selected)
-        self.receive_charset.setValues(self.Using_Koch, self.Koch_number, self.User_receive_set)
+        log('update_UI: .receive_using_Koch=%s, .receive_Koch_number=%d, .receive_User_list=%s'
+                % (str(self.receive_using_Koch), self.receive_Koch_number, str(self.receive_User_list)))
+        user_chars_dict = utils.list2dict(self.receive_User_list)
+        self.receive_charset.setState(self.receive_using_Koch, self.receive_Koch_number, user_chars_dict)
 
-    def receive_speeds_changed(self, wpm, cwpm):
-        """Something in the "receive speed" group changed."""
+    def receive_speeds_changed(self, cwpm, wpm):
+        """Something in the "receive speed" group changed.
 
-        self.receive_wpm = wpm
+        cwpm  new char speed
+        wpm   new word speed
+        """
+
         self.receive_cwpm = cwpm
+        self.receive_wpm = wpm
 
-    def receive_group_change(self, grouping):
+    def receive_group_change(self, index):
         """Receive grouping changed."""
 
-        self.receive_grouping = grouping
+        self.receive_group_index = index
+
+    def receive_charset_change(self, state):
+        """Handle a chage in the Receive charset group widget."""
+
+        (self.receive_using_Koch,
+         self.receive_Koch_number, self.receive_User_list) = state
+        log('receive_charset_change: state=%s' % str(state))
+        self.update_UI()
 
     def closeEvent(self, *args, **kwargs):
         """Program close - save the internal state."""
@@ -257,11 +279,12 @@ class MorseTrainer(QTabWidget):
             self.receive_stats[char] = (0, 0)
 
         # the character sets we test on and associated variables
-        self.Using_Koch = True
-        self.Koch_number = 2
-        self.Koch_send_set = []
-        self.Koch_receive_set = utils.Koch[:self.Koch_number]
-        self.User_receive_set = []
+        self.receive_using_Koch = True
+        self.receive_Koch_number = 2
+        self.receive_Koch_list = [char for char in utils.Koch[:self.receive_Koch_number]]
+        self.receive_User_list = []
+
+        self.send_Koch_list = [] # [char for char in utils.Koch[:self.send_Koch_number]]
 
         # send and receive speeds
         self.send_wpm = None        # not used yet
@@ -269,22 +292,25 @@ class MorseTrainer(QTabWidget):
         self.receive_cwpm = 5
 
         # the receive grouping
-        self.receive_grouping = 0
+        self.receive_group_index = 0
 
-        # set the "previous tab" value
-        self.previous_tab = MorseTrainer.SendTab
+        # set the current and previous tab indices
+        self.current_tab_index = MorseTrainer.SendTab
+        self.previous_tab_index = None
 
     def load_state(self, filename):
         """Load saved state from the given file."""
 
         # read JSON from file, if we can
         if filename is None:
+            log('load_state: no state file configured to recover from')
             return
 
         try:
             with open(filename, 'r') as fd:
                 data = json.load(fd)
         except FileNotFoundError:
+            log("load_state: state file %s not found" % filename)
             return
 
         # get data from the restore dictionary, if possible
@@ -294,9 +320,35 @@ class MorseTrainer(QTabWidget):
             except KeyError:
                 pass
             else:
+                log('load_state: setting var %s to %s' % (var_name, str(value)))
                 setattr(self, var_name, value)
 
+#    StateVarNames = ['send_stats', 'receive_stats', 'receive_using_Koch',
+#                     'receive_Koch_number', 'receive_Koch_list',
+#                     'receive_User_list', 'receive_wpm', 'receive_cwpm',
+#                     'receive_group_index', 'send_wpm', 'send_Koch_list',
+#                     'current_tab_index']
+
+        #####
         # now update UI state from state variables
+        #####
+
+        # the speed
+        self.receive_speeds.setState(self.receive_wpm, cwpm=self.receive_cwpm)
+        log('load_state: set receive speed: %s' % str(self.receive_cwpm))
+        # the grouping
+        self.receive_groups.setState(self.receive_group_index)
+        log('load_state: set receive group index: %s' % str(self.receive_group_index))
+        # the charset used
+        self.receive_charset.setState(self.receive_using_Koch,
+                                      self.receive_Koch_number,
+                                      self.receive_User_list)
+        log('load_state: set .receive_using_Koch=%s\n.receive_Koch_number=%s\n'
+            '.receive_User_list=%s' % (str(self.receive_using_Koch),
+                                       str(self.receive_Koch_number),
+                                       str(self.receive_User_list)))
+
+        self.set_app_tab(self.current_tab_index)
 
     def save_state(self, filename):
         """Save saved state to the given file."""
@@ -355,24 +407,32 @@ class MorseTrainer(QTabWidget):
         tab_index  index of the new tab
         """
 
+        self.current_tab_index = tab_index
+        old_tab = MorseTrainer.TabIndex2Name.get(self.previous_tab_index, str(None))
+
         # if we left the "send" tab, turn off action, if any
-        if self.previous_tab == MorseTrainer.SendTab:
-            log('tab_change: turning off send action')
+        if self.previous_tab_index == MorseTrainer.SendTab:
+            pass
 
         # if we left the "receive" tab, turn off action, if any
-        if self.previous_tab == MorseTrainer.ReceiveTab:
-            log('tab_change: turning off receive action')
+        if self.previous_tab_index == MorseTrainer.ReceiveTab:
+            pass
 
         # if we changed to the "statistics" tab, refresh the stats widget
         if tab_index == MorseTrainer.StatisticsTab:
             percents = self.stats2percent(self.send_stats)
-            self.send_status.refresh(percents)
+            self.send_status.setState(percents)
 
             percents = self.stats2percent(self.receive_stats)
-            self.receive_status.refresh(percents)
+            self.receive_status.setState(percents)
 
         # remember the previous tab for NEXT TIME WE CHANGE
-        self.previous_tab = tab_index
+        self.previous_tab_index = tab_index
+
+    def set_app_tab(self, tab_index):
+        """Make app show the required tab index sheet."""
+
+        self.setCurrentIndex(tab_index)
 
 
 if __name__ == '__main__':

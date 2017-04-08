@@ -7,16 +7,13 @@ A PyQt5 custom widget used by Morse Trainer.
 Shows the characters to be used in the send/receive tests.  Use either
 the Koch suggested set or a custom set.
 
-charset = Charset()
+charset = Charset(Koch_status, Koch_number, User_charset)
 
-charset.setKoch(status)
-charset.setKochNumber(n)
-charset.getKochStatus()
+charset.setState(Koch_status, Koch_number, User_charset)
+(Koch_status, Koch_number, User_charset) = charset.getSelected()
 
-charset.setSelected(selection)
-selection = charset.getSelected()
-
-Raises a '.changed' signal on any state change.
+Raises a '.changed' signal on any state change.  The event receives a tuple:
+    (Koch_status, Koch_number, User_charset)
 """
 
 import platform
@@ -43,12 +40,14 @@ class Charset(QWidget):
     else:
         raise Exception('Unrecognized platform: %s' % platform.system())
 
-    # signal raised when internal state changes
-    changed = pyqtSignal()
-
     # set Koch max/min numbers
     KochMin = 2
     KochMax = len(utils.Koch)
+
+
+    # signal raised when internal state changes
+    changed = pyqtSignal(tuple)
+
 
     def __init__(self, koch_selected=True, koch_num=2, user_charset=None):
         """Initialize the widget.
@@ -85,22 +84,28 @@ class Charset(QWidget):
         self.btn_Numbers.clicked.connect(self.setAllNumbersHandler)
         self.btn_Punct.clicked.connect(self.setAllPunctHandler)
 
+        self.gs_Alphas.changed.connect(self.gs_item_clicked)
+        self.gs_Numbers.changed.connect(self.gs_item_clicked)
+        self.gs_Punct.changed.connect(self.gs_item_clicked)
+
         # arrange for widget to start signalling now
         self.make_signal = True
 
-        self.setFixedHeight(250)
+        self.setFixedHeight(270)
         self.show()
 
     def initUI(self):
         """Set up the UI."""
 
         # create all the sub-widgets
-        self.rb_Koch = QRadioButton("Use the Koch character set")
-        koch_using = QLabel('Using')
+        self.rb_Koch = QRadioButton('Use the Koch character set')
+        koch_using = QLabel('Using:')
         self.sb_KochNumber = QSpinBox(self)
         self.sb_KochNumber.setMinimum(Charset.KochMin)
         self.sb_KochNumber.setMaximum(Charset.KochMax)
-        self.rb_User = QRadioButton("Select the characters to use")
+        self.rb_User = QRadioButton('Select the characters to use')
+        user_using = QLabel('Using:')
+        self.lbl_UserNumber = QLabel('0')
         self.btn_Alphas = QPushButton('Alphabet', self)
         self.gs_Alphas = GridSelect(utils.Alphabetics)
         self.btn_Numbers = QPushButton('Numbers', self)
@@ -109,7 +114,8 @@ class Charset(QWidget):
         self.gs_Punct = GridSelect(utils.Punctuation)
 
         layout = QVBoxLayout()
-        groupbox = QGroupBox("Test character set")
+        groupbox = QGroupBox('Test character set')
+        groupbox.setStyleSheet(utils.StyleCSS)
         layout.addWidget(groupbox)
 
         # tie the radio buttons into a group
@@ -119,17 +125,24 @@ class Charset(QWidget):
 
         # put widgets into a grid
         grid = QGridLayout()
-        grid.setSpacing(2)
-        grid.setHorizontalSpacing(5)
-        grid.setVerticalSpacing(5)
+        grid.setSpacing(1)
+        grid.setHorizontalSpacing(2)
+        grid.setVerticalSpacing(1)
 
         row = 0
-        grid.addWidget(self.rb_Koch, row, 0, 1, 3, alignment=Qt.AlignLeft|Qt.AlignVCenter)
-        grid.addWidget(koch_using, row, 3, alignment=Qt.AlignRight|Qt.AlignVCenter)
-        grid.addWidget(self.sb_KochNumber, row, 4, alignment=Qt.AlignLeft|Qt.AlignVCenter)
+        grid.addWidget(self.rb_Koch, row, 0, 1, 3,
+                       alignment=Qt.AlignLeft|Qt.AlignVCenter)
+        grid.addWidget(koch_using, row, 3,
+                       alignment=Qt.AlignRight|Qt.AlignVCenter)
+        grid.addWidget(self.sb_KochNumber, row, 4,
+                       alignment=Qt.AlignLeft|Qt.AlignVCenter)
 
         row += 1
         grid.addWidget(self.rb_User, row, 0, 1, 3, alignment=Qt.AlignLeft)
+        grid.addWidget(user_using, row, 3,
+                       alignment=Qt.AlignRight|Qt.AlignVCenter)
+        grid.addWidget(self.lbl_UserNumber, row, 4,
+                       alignment=Qt.AlignLeft|Qt.AlignVCenter)
 
         row += 1
         grid.addWidget(self.btn_Alphas, row, 1,
@@ -156,18 +169,23 @@ class Charset(QWidget):
         groupbox.setLayout(grid)
         self.setLayout(layout)
 
-        self.setMinimumSize(440, 250)
+        self.setMinimumSize(550, 250)
 
         self.setWindowTitle('Test of Charset widget')
         self.show()
 
+        # tie widgets to change handlers
+        self.gs_Alphas.changed.connect(self.was_changed)
+        self.gs_Numbers.changed.connect(self.was_changed)
+        self.gs_Punct.changed.connect(self.was_changed)
+
     def setKoch(self, status):
-        """Set the characterset used, Koch or User.
+        """Set the charset used, Koch or User.
 
         status  True if Koch used, else False
         """
 
-        self.Koch = status
+        self.koch = status
         if status:
             self.rb_Koch.setChecked(True)
             self.sb_KochNumber.setEnabled(True)
@@ -201,11 +219,6 @@ class Charset(QWidget):
 
         self.update()
 
-    def getKochStatus(self, koch_num):
-        """Return True if we are using the Koch charset, else False."""
-
-        return self.koch
-
     def setSelected(self, selected):
         """Sets the user-selected characters.
 
@@ -216,9 +229,10 @@ class Charset(QWidget):
         """
 
         # worry about the grid displays being disabled?
-        self.gs_Alphas.set_selection(selected)
-        self.gs_Numbers.set_selection(selected)
-        self.gs_Punct.set_selection(selected)
+        self.user_charset = selected
+        self.gs_Alphas.setState(selected)
+        self.gs_Numbers.setState(selected)
+        self.gs_Punct.setState(selected)
 
         self.update()
 
@@ -230,9 +244,9 @@ class Charset(QWidget):
         """
 
         # worry about the grid displays being disabled?
-        alpha_selected = self.gs_Alphas.get_selection()
-        num_selected = self.gs_Numbers.get_selection()
-        punct_selected = self.gs_Punct.get_selection()
+        alpha_selected = self.gs_Alphas.getState()
+        num_selected = self.gs_Numbers.getState()
+        punct_selected = self.gs_Punct.getState()
 
         # combine the three dictionaries
         return {**alpha_selected, **num_selected, **punct_selected}
@@ -241,39 +255,35 @@ class Charset(QWidget):
         """Handle a click on the Koch radiobutton."""
 
         self.setKoch(True)
+        self.was_changed()
 
     def changeRBUser(self, signal):
         """Handle a click on the User radiobutton."""
 
         self.setKoch(False)
+        self.was_changed()
 
     def changeKochNumberHandler(self, signal):
         """User changed the Koch number spin box."""
 
-        print('changeKochNumberHandler: got change')
-        import sys
-        sys.stdout.flush()
-
         self.koch_num = self.sb_KochNumber.value()
+        self.was_changed()
 
-    def handleCharsetButton(self, gs):
-        """Handle a click on any charset button.
+    def gs_item_clicked(self):
+        """A grid select item was clicked.  Update the user "in use" count."""
 
-        gs  reference to the GridSelect object
-        """
+        # update the self.user_charset dict
+        self.user_charset = self.getSelected()
 
-        # if all already selected, clear
-        selection = gs.get_selection()
-        all_true = all([value for (key, value) in selection.items()])
+        # update "in use" count for user chars
+        self.setUserCount()
 
-        if all_true:
-            # all selected, turn all off
-            new_dict = {key:False for key in selection}
-        else:
-            # one or more not selected, turn all on
-            new_dict = {key:True for key in selection}
+        self.was_changed()
 
-        gs.set_selection(new_dict)
+    def was_changed(self):
+        """Something changed inside the widget.  Tell the world."""
+
+        self.changed.emit(self.getState())
 
     def setAllAlphasHandler(self, signal):
         """User clicked on the 'use all alphas' button."""
@@ -290,7 +300,55 @@ class Charset(QWidget):
 
         self.handleCharsetButton(self.gs_Punct)
 
-    def setValues(self, koch, koch_num, user_charset):
+    def handleCharsetButton(self, gs):
+        """Handle a click on any charset button.
+
+        gs  reference to the GridSelect object
+        """
+
+        # if all already selected, clear
+        selection = gs.getState()
+        all_true = all([value for (key, value) in selection.items()])
+
+        if all_true:
+            # all selected, turn all off
+            new_dict = {key:False for key in selection}
+        else:
+            # one or more not selected, turn all on
+            new_dict = {key:True for key in selection}
+
+        gs.setState(new_dict)
+
+        # update "in use" count for user chars
+        self.user_charset = self.getSelected()
+        self.setUserCount()
+        self.update()
+
+        self.was_changed()
+
+    def setUserCount(self):
+        """Update the "in use" count for user characters."""
+
+        count = 0
+
+        for gs in (self.gs_Alphas, self.gs_Numbers, self.gs_Punct):
+            status = gs.getState()
+            for (_, v) in status.items():
+                if v:
+                    count += 1
+
+        self.lbl_UserNumber.setText(str(count))
+        self.lbl_UserNumber.update()
+
+    def getState(self):
+        """Returns state of the widget.
+
+        Returns a tuple: (koch, koch_number, user_charset)
+        """
+
+        return (self.koch, self.koch_num, self.user_charset)
+
+    def setState(self, koch, koch_num, user_charset):
         """Update internal values and redraw.
 
         koch          True if using Koch, False if using user charset
@@ -306,5 +364,14 @@ class Charset(QWidget):
         self.rb_Koch.setChecked(koch)
         self.rb_User.setChecked(not koch)
         self.sb_KochNumber.setValue(koch_num)
+
+        # set buttons in all grid select sub-widgets
+        self.gs_Alphas.changed.connect(self.gs_item_clicked)
+        self.gs_Numbers.changed.connect(self.gs_item_clicked)
+        self.gs_Punct.changed.connect(self.gs_item_clicked)
+        for gs in (self.gs_Alphas, self.gs_Numbers, self.gs_Punct):
+            gs.setState(user_charset)
+
+        self.setUserCount()
 
         self.update()

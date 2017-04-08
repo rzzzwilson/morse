@@ -20,7 +20,9 @@ class TestCharset(QWidget):
 
 
     def initUI(self):
-        self.display = Charset(koch_selected=True, koch_num=2, user_charset=None)
+        user_charset = {'A':True, '0':True}
+        self.display = Charset(koch_selected=False, koch_num=2,
+                               user_charset=user_charset)
 
         hbox1 = QHBoxLayout()
         hbox1.addWidget(self.display)
@@ -35,8 +37,13 @@ class TestCharset(QWidget):
         self.setWindowTitle('Example of Charset widget')
         self.show()
 
-    def changeCharsetHandler(self):
-        print('Charset has changed')
+    def changeCharsetHandler(self, status):
+        """The widget has changed.
+
+        status  a dict {'A':True, 'B':False, ...} which is the new status
+        """
+
+        print('Charset has changed, status=\n%s' % str(status))
 
 app = QApplication(sys.argv)
 ex = TestCharset()

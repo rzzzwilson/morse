@@ -222,9 +222,9 @@ class Log(object):
 
         self(msg, self.DEBUG)
 
-    def __del__(self):
-        """Close the logging."""
-
-        self.logfd.close()
-        self.logfd = None
+#    def __del__(self):
+#        """Close the logging."""
+#
+#        self.logfd.close()
+#        self.logfd = None
 

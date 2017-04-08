@@ -4,14 +4,14 @@
 """
 A PyQt5 custom widget used by Morse Trainer.
 
-Used to select character and word speeds.
+Used to select character speed and show overall word speed.
 
 speed = Speeds()
 
-(wpm, cwpm) = speed.getSpeeds()
+speed.setState(wpm)     # sets the overall speed display
+cwpm = speed.getState() # get the char wpm value set by the user
 
 The widget generates a signal '.changed' when some value changes.
-The owning code must interrogate the widget for the values.
 """
 
 import platform
@@ -21,34 +21,37 @@ from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QVBoxLayout
 from PyQt5.QtWidgets import QLabel, QSpinBox, QGroupBox
 from PyQt5.QtCore import pyqtSignal
 
+import utils
+import logger
+log = logger.Log('debug.log', logger.Log.DEBUG)
+
 
 class Speeds(QWidget):
 
-    # signal raised when any value changes
+    # signal raised when user changes cwpm
     changed = pyqtSignal(int, int)
 
     # maximum and minimum speeds
     MinSpeed = 5
     MaxSpeed = 40
 
-    def __init__(self, word_speed=MinSpeed, char_speed=MinSpeed):
+    def __init__(self, char_speed=MinSpeed):
         QWidget.__init__(self)
-        self.initUI(word_speed, char_speed)
+        self.initUI(char_speed)
         self.setWindowTitle('Test Speeds widget')
         self.setFixedHeight(80)
         self.show()
 
         # define state variables
-        self.word_speed = word_speed
         self.char_speed = char_speed
 
-    def initUI(self, word_speed, char_speed):
+    def initUI(self, char_speed):
         # define the widgets we are going to use
         lbl_words = QLabel('  Overall')
         self.spb_words = QSpinBox(self)
         self.spb_words.setMinimum(Speeds.MinSpeed)
         self.spb_words.setMaximum(Speeds.MaxSpeed)
-        self.spb_words.setValue(word_speed)
+        self.spb_words.setValue(char_speed)
         self.spb_words.setSuffix(' wpm')
 
         lbl_chars = QLabel('Characters')
@@ -58,14 +61,11 @@ class Speeds(QWidget):
         self.spb_chars.setValue(char_speed)
         self.spb_chars.setSuffix(' wpm')
 
-        # connect spinbox events to handlers
-        self.spb_words.valueChanged.connect(self.handle_wordspeed_change)
-        self.spb_chars.valueChanged.connect(self.handle_charspeed_change)
-
         # start the layout
         layout = QVBoxLayout()
 
         groupbox = QGroupBox("Speeds")
+        groupbox.setStyleSheet(utils.StyleCSS)
         layout.addWidget(groupbox)
 
         hbox = QHBoxLayout()
@@ -79,50 +79,45 @@ class Speeds(QWidget):
 
         self.setLayout(layout)
 
-    def handle_wordspeed_change(self, word_speed):
-        """Word speed changed.
+        # connect spinbox events to handlers
+        self.spb_chars.valueChanged.connect(self.handle_charspeed_change)
+        self.spb_words.valueChanged.connect(self.handle_wordspeed_change)
 
-        Ensure the character speed is not less and send a signal.
-        """
+    def handle_wordspeed_change(self, word_speed):
+        """Word speed changed."""
 
         self.word_speed = word_speed
-
-        if self.char_speed < word_speed:
-            self.char_speed = word_speed
-            self.spb_chars.setValue(word_speed)
-
-        self.changed.emit(self.word_speed, self.char_speed)
+        self.changed.emit(self.char_speed, self.word_speed)
 
     def handle_charspeed_change(self, char_speed):
-        """Character speed changed.
-
-        Ensure the character speed is not less and send a signal.
-        """
+        """Character speed changed."""
 
         self.char_speed = char_speed
+        self.changed.emit(self.char_speed, self.word_speed)
 
-        if char_speed < self.word_speed:
-            self.word_speed = char_speed
-            self.spb_words.setValue(char_speed)
+    def setState(self, wpm, cwpm=None):
+        """Set the overall wpm speed.
 
-        self.changed.emit(self.word_speed, self.char_speed)
-
-    def setSpeeds(self, wpm, cwpm):
-        """Set the speeds.
-
-        wpm   the overall words per minute
-        cwpm  the character WPM
+        wpm   the overall words per minute (integer)
+        cwpm  the character speed in words per minute (integer)
         """
 
         self.word_speed = wpm
-        self.char_speed = cwpm
-
+        log('Speeds.setState: wpm=%s' % str(wpm))
         self.spb_words.setValue(wpm)
-        self.spb_chars.setValue(cwpm)
 
-    def getSpeeds(self):
-        """Return the speeds as a tuple: (word_speed, char_speed)."""
+        if cwpm is not None:
+            self.char_speed = cwpm
+            log('Speeds.setState: cwpm=%s' % str(cwpm))
+            self.spb_chars.setValue(cwpm)
 
-        print('getSpeeds: .word_speed=%d, .char_speed=%d' % (self.word_speed, self.char_speed))
+        self.update()
 
-        return (self.word_speed, self.char_speed)
+    def getState(self):
+        """Return the chosen speeds.
+
+
+        Returns a tuple: (char_speed, word_speed)
+        """
+
+        return (self.char_speed, self.word_speed)

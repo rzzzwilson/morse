@@ -4,7 +4,7 @@
 """
 The 'instructions' widget for Morse Trainer.
 
-Used to show a QLabel containing instructions.
+Used to show a QLabel containing instructions.  Read only.
 
 instructions = Instructions()
 """
@@ -29,6 +29,5 @@ class Instructions(QWidget):
         # start the layout
         layout = QVBoxLayout()
         layout.addWidget(doc)
-#        layout.addStretch()
 
         self.setLayout(layout)

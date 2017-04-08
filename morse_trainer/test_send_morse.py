@@ -21,27 +21,35 @@ def usage(msg=None):
         print(('*'*80 + '\n%s\n' + '*'*80) % msg)
     print("\n"
           "CLI program to send morse strings from CLI input.\n\n"
-          "Usage: %s [-h]\n\n"
-          "where -h  means priont this help and stop" % prog_name)
+          "Usage: %s [-h] [-s c,w]\n\n"
+          "where -h      means print this help and stop\n"
+          "      -s c,w  means set char and word speeds" % prog_name)
 
 
 # parse the CLI params
 argv = sys.argv[1:]
 
 try:
-    (opts, args) = getopt.getopt(argv, 'h', ['help'])
+    (opts, args) = getopt.getopt(argv, 'hs:', ['help', '--speed='])
 except getopt.GetoptError as err:
     usage(err)
     sys.exit(1)
 
+cwpm = 25
+wpm = 15
 for (opt, param) in opts:
     if opt in ['-h', '--help']:
         usage()
         sys.exit(0)
+    elif opt in ['-s', '--speed']:
+        speeds = param.split(',')
+        if len(speeds) != 2:
+            usage('-s option must be followed by two speeds, eg: -s 10,5')
+        (cwpm, wpm) = speeds
+        cwpm = int(cwpm)
+        wpm = int(wpm)
 
 morse = SendMorse()
-cwpm = 25
-wpm = 15
 morse.set_speeds(cwpm=cwpm, wpm=wpm)
 
 (cwpm, wpm) = morse.get_speeds()

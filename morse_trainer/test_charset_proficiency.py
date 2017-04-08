@@ -9,11 +9,11 @@ import sys
 from random import randint
 from PyQt5.QtWidgets import (QApplication, QWidget, QPushButton,
                              QHBoxLayout, QVBoxLayout)
-from charset_status import CharsetStatus
+from charset_proficiency import CharsetProficiency
 import utils
 
 
-class TestCharsetStatus(QWidget):
+class TestCharsetProficiency(QWidget):
     """Application to demonstrate the Morse Trainer 'charset status' widget."""
 
     def __init__(self):
@@ -21,8 +21,9 @@ class TestCharsetStatus(QWidget):
         self.initUI()
 
     def initUI(self):
-        self.status = CharsetStatus('Test Status', utils.Alphabetics,
-                                    utils.Numbers, utils.Punctuation)
+        self.status = CharsetProficiency('Test Status', utils.Alphabetics,
+                                                        utils.Numbers,
+                                                        utils.Punctuation)
         redisplay_button = QPushButton('Redisplay', self)
 
         hbox1 = QHBoxLayout()
@@ -39,7 +40,7 @@ class TestCharsetStatus(QWidget):
         redisplay_button.clicked.connect(self.redisplayButtonClicked)
 
         self.setGeometry(100, 100, 800, 200)
-        self.setWindowTitle('Example of CharsetStatus widget')
+        self.setWindowTitle('Example of CharsetProficiency widget')
         self.show()
 
     def redisplayButtonClicked(self):
@@ -48,10 +49,14 @@ class TestCharsetStatus(QWidget):
         # generate random data
         new = {}
         for char in self.status.data:
-            new[char] = randint(0,100)/100
-        self.status.refresh(new)
+            if char in 'A0?':
+                # first in each set is 0.0
+                new[char] = 0.0
+            else:
+                new[char] = randint(0,100)/100
+        self.status.setState(new)
 
 
 app = QApplication(sys.argv)
-ex = TestCharsetStatus()
+ex = TestCharsetProficiency()
 sys.exit(app.exec())
